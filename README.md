@@ -8,7 +8,7 @@ It builds trip demand per mahalla (585 zones) from population, age structure, jo
 
 ## See the animation (no setup)
 
-Open `viewer/index.html` in a browser (it needs internet only for the fonts). It shows cars moving along the roads from 06:00 to 10:00 in 15-minute steps. Zoom with the wheel, drag to pan, drag the slider to jump in time.
+Open `viewer/index.html` in a browser (it needs internet only for the fonts). It shows cars moving along the roads from 06:00 to 10:00. The model is solved every 15 minutes; the "Update" dropdown sets how often the picture refreshes (15, 5 or 1 minute). The 5 and 1-minute options blend between the 15-minute results, so they look smoother but add no new model information. Zoom with the wheel, drag to pan, drag the slider to jump in time.
 
 ## Run the whole pipeline
 

@@ -26,12 +26,12 @@ h1 { font: 600 28px/1 var(--display); letter-spacing: .02em; text-transform: upp
 main { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 12px; min-height: 0; }
 .mapwrap { position: relative; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; }
 canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.ctl { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 10px; align-items: center; background: color-mix(in srgb, var(--bg) 86%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+.ctl { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; background: color-mix(in srgb, var(--bg) 86%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
 button, select { font: 500 13px var(--body); color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
 button:hover, select:hover { border-color: var(--dim); }
 button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
 #play { width: 74px; }
-input[type=range] { flex: 1; min-width: 0; accent-color: var(--amber); }
+input[type=range] { flex: 1 1 160px; min-width: 160px; accent-color: var(--amber); }
 .zoom { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; }
 .zoom button { width: 32px; padding: 6px 0; font-size: 16px; line-height: 1; }
 .layers { position: absolute; top: 10px; left: 10px; display: flex; gap: 12px; flex-wrap: wrap; background: color-mix(in srgb, var(--bg) 80%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--muted); }
@@ -72,7 +72,7 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
 <div class="app">
   <header>
     <h1>Tashkent Morning Traffic</h1>
-    <div class="sub">Modelled weekday, 06:00–10:00, in 15-minute steps · passenger cars</div>
+    <div class="sub">Modelled weekday, 06:00–10:00 · solved every 15 minutes, blended in between · passenger cars</div>
   </header>
   <main>
     <div class="mapwrap" id="mapwrap">
@@ -88,6 +88,7 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
         <button id="play">Pause</button>
         <input type="range" id="scrub" min="0" max="14399" value="5400" step="1" aria-label="Time of day">
         <select id="spd" aria-label="Clock speed"><option value="60">60×</option><option value="120" selected>120×</option><option value="300">300×</option><option value="600">600×</option></select>
+        <select id="upd" aria-label="Traffic update interval" title="How often the traffic picture updates"><option value="900">Update 15 min</option><option value="300" selected>Update 5 min</option><option value="60">Update 1 min</option></select>
       </div>
     </div>
     <aside>
@@ -144,18 +145,24 @@ function resize() {
 const sx = x => (x - view.cx) * view.s + W / 2, sy = y => (y - view.cy) * view.s + H / 2;
 
 // state
-const st = { t: 5400, playing: true, speed: 120, slice: -1, show: { roads: true, dots: true, dist: true } };
+const st = { t: 5400, playing: true, speed: 120, step: 300, slice: -1, show: { roads: true, dots: true, dist: true } };
 let act = null; // active particles
-function chunkTime(k, s) { return Math.max(0.5, T0[k] / 10 * RATIO[s*N + k] / 20); }
-function setSlice(s) {
-  st.slice = s; const K = 6, ids = [], ph = [], ts = [], cls = [];
+const SEC = 14400 / NS, CF = new Float32Array(N), CR = new Float32Array(N);
+function sample(bin) {   // blend the two nearest 15-minute model steps, linear between their mid-points
+  const tc = bin * st.step + st.step / 2, pc = Math.max(0, Math.min(NS - 1, tc / SEC - 0.5)), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0;
+  for (let k = 0; k < N; k++) { CF[k] = FLOW[i0*N + k] * (1 - w) + FLOW[i1*N + k] * w; CR[k] = RATIO[i0*N + k] * (1 - w) + RATIO[i1*N + k] * w; }
+  return { i0, i1, w };
+}
+function chunkTime(k) { return Math.max(0.5, T0[k] / 10 * CR[k] / 20); }
+function setBin(bin) {
+  st.slice = bin; const bl = sample(bin), K = 6, ids = [], ph = [], ts = [], cls = [];
   for (let k = 0; k < N; k++) {
-    const f = FLOW[s*N + k]; if (f < 1) continue; const tsec = chunkTime(k, s), m = f * tsec / 3600 / K; if (m <= 0) continue;
-    const n = Math.ceil(m), ratio = RATIO[s*N + k] / 20;
+    const f = CF[k]; if (f < 1) continue; const tsec = chunkTime(k), m = f * tsec / 3600 / K; if (m <= 0) continue;
+    const n = Math.ceil(m), ratio = CR[k] / 20;
     for (let i = 0; i < n; i++) { if (i + RND1[k] >= m) continue; ids.push(k); ph.push((i + RND2[k]) / n); ts.push(tsec); cls.push(ratio < 1.25 ? 0 : ratio < 2 ? 1 : 2); }
   }
   act = { ids: Int32Array.from(ids), ph: Float32Array.from(ph), ts: Float32Array.from(ts), cls: Uint8Array.from(cls), n: ids.length };
-  drawRoads(); readout(s);
+  drawRoads(); readout(bin, bl);
 }
 const NAMEFONT = '11px "IBM Plex Sans", sans-serif';
 function drawRoads() {
@@ -166,10 +173,10 @@ function drawRoads() {
   }
   if (st.slice < 0) return;
   if (st.show.roads) {
-    const s = st.slice, off = Math.min(2.4, 0.9 + 0.35 * Math.log2(view.s / fit + 1)), wz = 0.55 + 0.45 * Math.log2(view.s / fit + 1);
+    const off = Math.min(2.4, 0.9 + 0.35 * Math.log2(view.s / fit + 1)), wz = 0.55 + 0.45 * Math.log2(view.s / fit + 1);
     const paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D()];
     for (let k = 0; k < N; k++) {
-      const f = FLOW[s*N + k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b];
+      const f = CF[k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b];
       const a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(sx(WX[a]) + ox, sy(WY[a]) + oy);
       for (let j = a + 1; j < e; j++) p.lineTo(sx(WX[j]) + ox, sy(WY[j]) + oy);
     }
@@ -186,7 +193,7 @@ let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
   if (st.playing) { st.t += dt * st.speed; if (st.t >= 14400) st.t -= 14400; }
-  const s = Math.min(NS - 1, Math.floor(st.t / 900)); if (s !== st.slice) setSlice(s);
+  const bin = Math.floor(st.t / st.step); if (bin !== st.slice) setBin(bin);
   document.getElementById('clock').textContent = fmt(st.t); document.getElementById('scrub').value = Math.floor(st.t); drawTL();
   gD.setTransform(DPR, 0, 0, DPR, 0, 0); gD.clearRect(0, 0, W, H);
   if (st.show.dots && act) {
@@ -207,8 +214,9 @@ const pad = n => String(n).padStart(2, '0'), fmt = t => { const m = Math.floor(t
 // readout
 const MIX = [['work', 'Commuters', '--work'], ['school', 'School runs', '--school'], ['college', 'College', '--college'], ['university', 'University', '--univ']];
 const nf = n => Math.round(n).toLocaleString('en-US');
-function readout(s) {
-  const r = D.stats[s]; document.getElementById('slice').textContent = 'step ' + r.clock + '–' + fmt(s * 900 + 900) + '';
+function readout(bin, bl) {
+  const a = D.stats[bl.i0], b = D.stats[bl.i1], r = {}; for (const k in a) r[k] = typeof a[k] === 'number' ? a[k] * (1 - bl.w) + b[k] * bl.w : a[k];
+  document.getElementById('slice').textContent = fmt(bin * st.step) + '–' + fmt(bin * st.step + st.step) + ' · ' + (st.step === SEC ? 'model step' : 'blended between 15-minute steps');
   document.getElementById('sVeh').textContent = nf(r.veh_on_network); document.getElementById('sSpd').textContent = r.avg_speed_kmh.toFixed(1);
   document.getElementById('sOver').textContent = nf(r.edges_vc_gt1); document.getElementById('sRate').textContent = nf(r.veh_per_hour_rate);
   const tot = MIX.reduce((a, m) => a + r['veh_' + m[0]], 0) || 1;
@@ -235,6 +243,7 @@ const $ = id => document.getElementById(id);
 $('play').onclick = () => { st.playing = !st.playing; $('play').textContent = st.playing ? 'Pause' : 'Play'; };
 $('scrub').oninput = e => { st.t = +e.target.value; };
 $('spd').onchange = e => { st.speed = +e.target.value; };
+$('upd').onchange = e => { st.step = +e.target.value; st.slice = -1; };
 [['lRoads', 'roads'], ['lDots', 'dots'], ['lDist', 'dist']].forEach(([id, k]) => $(id).onchange = e => { st.show[k] = e.target.checked; drawRoads(); });
 function zoomAt(f, x, y) { const wx = (x - W / 2) / view.s + view.cx, wy = (y - H / 2) / view.s + view.cy; view.s = Math.max(fit * 0.7, Math.min(fit * 40, view.s * f)); view.cx = wx - (x - W / 2) / view.s; view.cy = wy - (y - H / 2) / view.s; queue(); }
 let pend = false; const queue = () => { if (!pend) { pend = true; requestAnimationFrame(() => { pend = false; drawRoads(); }); } };
