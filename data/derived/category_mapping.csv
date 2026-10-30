@@ -1,0 +1,365 @@
+category,n_places,purpose,subtype,weight
+Супермаркеты,722,retail,supermarket,2.0
+Школы,517,education,school,1.0
+Банки,375,work,finance,15.0
+Больницы,340,health,hospital,20.0
+Многопрофильные медицинские центры,325,health,medical_center,4.0
+Лаки и краски,256,work,building_materials_trade,3.0
+Государственные службы,255,work,government,50.0
+Страхование,248,work,finance,15.0
+Легковой автосервис,239,work,auto_service,5.0
+Университеты,227,education,higher_ed,8.0
+Стройматериалы,225,work,building_materials_trade,3.0
+Юридические услуги,218,work,professional,8.0
+Застройщики,204,work,construction,25.0
+"Товары для отопления, водоснабжения, канализации",161,work,building_materials_trade,3.0
+Взрослые поликлиники,148,health,polyclinic,8.0
+Международные грузоперевозки,136,work,logistics,15.0
+Бухгалтерские услуги,114,work,professional,8.0
+Окна,102,work,building_materials_trade,3.0
+Декоративные отделочные материалы,102,work,building_materials_trade,3.0
+Напольные покрытия,98,work,building_materials_trade,3.0
+Керамическая плитка,95,work,building_materials_trade,3.0
+Аренда помещений,89,work,rental_office,3.0
+Бизнес-центры,87,work,business_center,5.0
+Обои,82,work,building_materials_trade,3.0
+Институты,77,education,higher_ed,8.0
+Рекламные агентства полного цикла,71,work,professional,8.0
+Складское хранение,69,work,logistics,15.0
+Продуктовые магазины,66,retail,grocery_shop,1.0
+Ремонт ходовой части автомобиля,60,work,auto_service,5.0
+Кузовной ремонт,58,work,auto_service,5.0
+Кровельные материалы,56,work,building_materials_trade,3.0
+Замена масла,49,work,auto_service,5.0
+Облицовочный камень,48,work,building_materials_trade,3.0
+Рынки,47,retail,bazaar,100.0
+<none>,44,other,uncategorised,0.0
+Герметики и клеи,38,work,building_materials_trade,3.0
+Междугородные автогрузоперевозки,38,work,logistics,15.0
+Лицеи,35,education,school,1.0
+Фасадные материалы и конструкции,33,work,building_materials_trade,3.0
+Торговые центры,33,retail,mall,50.0
+Размещение наружной рекламы,32,work,professional,8.0
+Сухие строительные смеси,31,work,building_materials_trade,3.0
+Шиномонтаж,31,work,auto_service,5.0
+Теплоизоляционные материалы,30,work,building_materials_trade,3.0
+Ремонт бензиновых двигателей,30,work,auto_service,5.0
+Инжиниринговые услуги,30,work,professional,8.0
+Коворкинг,29,work,office_it,20.0
+Медицинские анализы,27,health,small_clinic,1.0
+Авиагрузоперевозки,27,work,logistics,15.0
+Керамогранит,25,work,building_materials_trade,3.0
+Медицинская диагностика,24,health,small_clinic,1.0
+Автоматизация бизнес-процессов,21,work,office_it,20.0
+Академии,21,education,higher_ed,8.0
+Ремонт стартеров и генераторов,20,work,auto_service,5.0
+Call-центры,19,work,office_it,20.0
+Строительство административных зданий,19,work,construction,25.0
+Разработка и продвижение сайтов,18,work,office_it,20.0
+Дизайн рекламы,18,work,professional,8.0
+Железнодорожные грузоперевозки,17,work,logistics,15.0
+Новостройки,17,other,residential_or_no_jobs,0.0
+Межкомнатные двери,17,work,building_materials_trade,3.0
+Входные двери,15,work,building_materials_trade,3.0
+Колледжи,15,education,college,4.0
+Железобетонные изделия,13,industry,factory,30.0
+Оборудование для автоматизации промышленности,13,industry,factory,30.0
+Торгово-развлекательные центры,13,retail,mall,50.0
+Гидроизоляционные материалы,13,work,building_materials_trade,3.0
+Развал-схождение,13,work,auto_service,5.0
+Компьютерная диагностика автомобилей,13,work,auto_service,5.0
+Стеновые панели,13,work,building_materials_trade,3.0
+Архитектурное проектирование,13,work,professional,8.0
+Детские врачи,12,health,small_clinic,1.0
+Тюнинг,12,work,auto_service,5.0
+Тонирование автостёкол,12,work,auto_service,5.0
+ЛОР (отоларинголог),12,health,small_clinic,1.0
+Бетон и раствор,12,industry,factory,30.0
+Хокимият района города,12,work,government,50.0
+Пило- и лесоматериалы,11,work,building_materials_trade,3.0
+Материалы для дорожного строительства,11,work,building_materials_trade,3.0
+Экспресс-почта,10,work,post,8.0
+"ДСП, ДВП, фанера",10,work,building_materials_trade,3.0
+Языковые школы,10,education,courses,0.5
+Реклама в интернете,10,work,professional,8.0
+Информационная безопасность,10,work,office_it,20.0
+Цемент,10,work,building_materials_trade,3.0
+Изготовление рекламных конструкций,9,work,professional,8.0
+Отделочные материалы,9,work,building_materials_trade,3.0
+Детейлинг,9,work,auto_service,5.0
+Городские автогрузоперевозки,9,work,logistics,15.0
+Газовое оборудование для авто,8,work,auto_service,5.0
+Таможенное оформление,8,work,logistics,15.0
+Экспедирование грузов,8,work,logistics,15.0
+Роддома,8,health,hospital,20.0
+Строительство дорог,8,work,construction,25.0
+Программное обеспечение,7,work,office_it,20.0
+Невролог,7,health,small_clinic,1.0
+Системное администрирование,7,work,office_it,20.0
+Промышленное строительство,7,work,construction,25.0
+Детская одежда,7,retail,grocery_shop,1.0
+Строительство объектов связи,7,work,construction,25.0
+Гипсокартон,7,work,building_materials_trade,3.0
+Гинеколог,7,health,small_clinic,1.0
+Комплектующие для окон,7,work,building_materials_trade,3.0
+Альтернативная медицина,6,health,small_clinic,1.0
+Оборудование для бассейнов,6,work,building_materials_trade,3.0
+Ремонт электронных систем авто,6,work,auto_service,5.0
+Строительство дач и коттеджей,6,work,construction,25.0
+Кирпич,6,work,building_materials_trade,3.0
+Разработка мобильных приложений,6,work,office_it,20.0
+Запчасти для легковых автомобилей,6,work,auto_service,5.0
+Дизайн интерьеров,5,work,professional,8.0
+Стекло и зеркала,5,work,building_materials_trade,3.0
+Бытовая техника,5,retail,grocery_shop,1.0
+Тротуарная плитка,5,work,building_materials_trade,3.0
+Перевод с иностранных языков,5,work,professional,8.0
+Офисная мебель,5,work,rental_office,3.0
+Ремонт электроавтомобилей,5,work,auto_service,5.0
+Звукоизоляционные материалы,5,work,building_materials_trade,3.0
+Маркетинговые исследования,5,work,professional,8.0
+Автомойки,5,work,auto_service,5.0
+Частные стоматологии,5,health,small_clinic,1.0
+Массажист,5,health,small_clinic,1.0
+Огнеупорные материалы,5,work,building_materials_trade,3.0
+Металлоизделия,5,work,building_materials_trade,3.0
+Лекарства - опт,5,industry,workshop,5.0
+Обслуживание автомобильных климатических систем,5,work,auto_service,5.0
+Студенческие общежития,4,other,residential_or_no_jobs,0.0
+Детские поликлиники,4,health,polyclinic,8.0
+Уролог,4,health,small_clinic,1.0
+Склады индивидуального хранения,4,work,logistics,15.0
+Банкоматы,4,other,residential_or_no_jobs,0.0
+Автоаксессуары,4,work,auto_service,5.0
+Строительные блоки,4,work,building_materials_trade,3.0
+Законодательная власть,4,work,government,50.0
+Морские и речные грузоперевозки,4,work,logistics,15.0
+Реклама в СМИ,4,work,professional,8.0
+Косметолог,4,health,medical_center,4.0
+Реабилитационные центры,4,health,medical_center,4.0
+Специальные школы,4,education,school,1.0
+Порошковые краски,4,work,building_materials_trade,3.0
+Песок и щебень,4,work,building_materials_trade,3.0
+Погонажные изделия,4,work,building_materials_trade,3.0
+Мебельные фабрики,4,industry,factory,30.0
+Сэндвич-панели,3,work,building_materials_trade,3.0
+Травматолог-ортопед,3,health,small_clinic,1.0
+Трикотажные изделия,3,industry,factory,30.0
+Видеосъёмка,3,work,professional,8.0
+Домашний текстиль,3,industry,workshop,5.0
+Информационные сервисы,3,work,office_it,20.0
+Кабель и провод,3,work,building_materials_trade,3.0
+Строительство бань и саун,3,work,construction,25.0
+Сетевое оборудование,3,work,building_materials_trade,3.0
+Световая реклама,3,work,professional,8.0
+Сантехника,3,work,building_materials_trade,3.0
+Разработка программного обеспечения,3,work,office_it,20.0
+Ремонт дизельных двигателей,3,work,auto_service,5.0
+Ремонт инжекторов,3,work,auto_service,5.0
+Печать на сувенирах,3,work,rental_office,3.0
+Металлообработка,3,industry,factory,30.0
+Меха и кожа,3,industry,factory,30.0
+Производство изделий из пластмасс,3,industry,factory,30.0
+Офтальмолог,3,health,small_clinic,1.0
+Обучение бизнес-профессиям,3,education,courses,0.5
+Полиграфия,3,work,professional,8.0
+Швейное производство,3,industry,factory,30.0
+Хозтовары,3,retail,grocery_shop,1.0
+Автохимия,3,work,auto_service,5.0
+Безалкогольные напитки,3,industry,workshop,5.0
+Алкогольные напитки,3,industry,workshop,5.0
+Агентства недвижимости,3,work,professional,8.0
+Автозвук,2,work,auto_service,5.0
+Автосигнализации,2,work,auto_service,5.0
+Пакеты и плёнки,2,industry,factory,30.0
+Аренда спецтехники,2,work,rental_office,3.0
+БАДы,2,other,residential_or_no_jobs,0.0
+Бухгалтерские курсы,2,education,courses,0.5
+Управленческий консалтинг,2,work,professional,8.0
+Хлебобулочные изделия,2,industry,workshop,5.0
+Физиотерапевт,2,health,small_clinic,1.0
+Фото на документы,2,work,rental_office,3.0
+Нетканые и технические материалы,2,work,building_materials_trade,3.0
+Переподготовка и повышение квалификации,2,education,courses,0.5
+Пластическая хирургия,2,other,residential_or_no_jobs,0.0
+Пошив автоковров,2,work,auto_service,5.0
+Широкоформатная печать,2,work,professional,8.0
+Остеопат,2,health,small_clinic,1.0
+Календари и открытки,2,work,rental_office,3.0
+Роды и лечение за рубежом,2,health,small_clinic,1.0
+Ремонт гибридных автомобилей,2,work,auto_service,5.0
+Ремонт дизельной топливной системы,2,work,auto_service,5.0
+Ремонт железнодорожной техники,2,industry,factory,30.0
+Ремонт помещений,2,work,building_materials_trade,3.0
+Ремонт спецтехники,2,work,auto_service,5.0
+Ремонт МКПП,2,work,auto_service,5.0
+Реклама на транспорте,2,work,professional,8.0
+Мука и крупы,2,industry,workshop,5.0
+Мебельная фурнитура,2,work,building_materials_trade,3.0
+Мужская одежда,2,retail,grocery_shop,1.0
+Трихолог,2,health,small_clinic,1.0
+Строительство мостов / тоннелей,2,work,construction,25.0
+ТЦ товаров для интерьера и ремонта,2,retail,mall_interior,20.0
+Геодезические работы,2,work,professional,8.0
+Грузчики,2,work,logistics,15.0
+Ткани,2,industry,workshop,5.0
+Спецодежда,2,industry,workshop,5.0
+Строительное оборудование,2,work,building_materials_trade,3.0
+Строительство бассейнов и аквапарков,2,work,construction,25.0
+Диспансеры,2,health,polyclinic,8.0
+Женская одежда,2,retail,grocery_shop,1.0
+Вакцинация,2,health,small_clinic,1.0
+Запчасти для грузовых авто,2,work,auto_service,5.0
+Заборы и ограждения,2,work,building_materials_trade,3.0
+Измерительный инструмент,2,industry,factory,30.0
+Сайты объявлений,2,other,residential_or_no_jobs,0.0
+Сварочные работы,2,work,building_materials_trade,3.0
+Сельхозкорма,2,industry,workshop,5.0
+Лицензирование,2,work,professional,8.0
+Кованые изделия,2,industry,workshop,5.0
+Промоушн-акции,2,work,professional,8.0
+Промышленные трубы,2,work,building_materials_trade,3.0
+Пункты обмена валют,2,work,finance_minor,3.0
+Пункты техосмотра,2,work,auto_service,5.0
+Мебель на заказ,2,industry,workshop,5.0
+Магазины азиатских продуктов,2,retail,grocery_shop,1.0
+Установка и ремонт автостёкол,1,work,auto_service,5.0
+Установка и ремонт автооптики,1,work,auto_service,5.0
+Фулфилмент,1,work,logistics,15.0
+Хокимият города,1,work,government,50.0
+Хостинг,1,work,office_it,20.0
+Автостекло,1,work,auto_service,5.0
+Быстровозводимые здания,1,work,construction,25.0
+Фасадные работы,1,work,construction,25.0
+Утилизация отходов и переработка вторсырья,1,industry,factory,30.0
+Фотосъёмка,1,work,professional,8.0
+Авиатехника,1,industry,factory,30.0
+Бизнес-тренинги,1,education,courses,0.5
+Продукты быстрого приготовления,1,industry,workshop,5.0
+Продажа легковых автомобилей,1,work,auto_service,5.0
+Продажа кофе,1,retail,grocery_shop,1.0
+Проведение хирургических операций,1,health,small_clinic,1.0
+Правительство,1,work,government,50.0
+Помощь в обучении,1,education,courses,0.5
+Подолог,1,health,small_clinic,1.0
+Пищевое оборудование,1,industry,factory,30.0
+Очищение организма,1,health,small_clinic,1.0
+Питьевая вода,1,industry,workshop,5.0
+Паркинги,1,other,residential_or_no_jobs,0.0
+Перегородки,1,work,building_materials_trade,3.0
+Организация выставок,1,work,professional,8.0
+Оргстекло и поликарбонат,1,work,building_materials_trade,3.0
+Оформление недвижимости,1,work,professional,8.0
+Охранные системы,1,work,professional,8.0
+Нефте- и газодобывающие компании,1,industry,factory,30.0
+Оборудование для производства окон,1,industry,factory,30.0
+Ногтевой сервис,1,other,residential_or_no_jobs,0.0
+Нижнее бельё,1,retail,grocery_shop,1.0
+Общественные организации,1,other,residential_or_no_jobs,0.0
+Огнезащитные материалы,1,work,building_materials_trade,3.0
+Обслуживание бассейнов,1,work,construction,25.0
+Оборудование для производства пластмасс,1,industry,factory,30.0
+Экспертиза зданий и сооружений,1,work,professional,8.0
+Цветной металлопрокат,1,work,building_materials_trade,3.0
+Центры паровых коктейлей,1,retail,hospitality,2.0
+Центры подключения водителей,1,work,auto_service,5.0
+Центры раннего развития детей,1,education,courses,0.5
+Чёрный металлопрокат,1,work,building_materials_trade,3.0
+Швейные ателье,1,industry,workshop,5.0
+Шины и диски,1,work,auto_service,5.0
+Автоматические двери,1,work,building_materials_trade,3.0
+Автосервис самообслуживания,1,work,auto_service,5.0
+Автомобилестроение,1,industry,factory,30.0
+Буровое оборудование,1,industry,factory,30.0
+Благоустройство улиц,1,work,construction,25.0
+Бумажная упаковка,1,industry,factory,30.0
+Ремонт АКПП,1,work,auto_service,5.0
+Музыкальные курсы,1,education,courses,0.5
+Медицинские комиссии,1,health,small_clinic,1.0
+Медицинское оборудование,1,other,residential_or_no_jobs,0.0
+Металлорежущий инструмент,1,industry,factory,30.0
+Прокуратура,1,work,government,50.0
+Ремонт промышленного оборудования,1,industry,factory,30.0
+Ремонт окон,1,work,building_materials_trade,3.0
+Ремонт и тюнинг мототехники,1,work,auto_service,5.0
+Рестораны,1,retail,hospitality,2.0
+Компьютерные клубы,1,retail,hospitality,2.0
+Ревматолог,1,health,small_clinic,1.0
+Научно-исследовательские институты,1,health,medical_center,4.0
+Расходные материалы для оргтехники,1,work,rental_office,3.0
+Насосное оборудование,1,work,building_materials_trade,3.0
+Миграционные услуги,1,work,professional,8.0
+Микрохирургия глаза,1,health,small_clinic,1.0
+Логопед,1,health,small_clinic,1.0
+Мануальный терапевт,1,health,small_clinic,1.0
+Малярный инструмент,1,work,building_materials_trade,3.0
+Пункты приёма платежей,1,work,finance_minor,3.0
+Производство обуви,1,industry,factory,30.0
+Психотерапевт,1,health,small_clinic,1.0
+Промышленная химия,1,industry,factory,30.0
+Проектирование дорог и мостов,1,work,professional,8.0
+Проектирование инженерных систем,1,work,professional,8.0
+Свайные работы,1,work,construction,25.0
+Сварочное оборудование,1,work,building_materials_trade,3.0
+Личностные тренинги,1,education,courses,0.5
+Садовый инвентарь,1,retail,grocery_shop,1.0
+Крепёж,1,work,building_materials_trade,3.0
+Курсы вокала,1,education,courses,0.5
+Лазерная резка неметаллов,1,work,rental_office,3.0
+Литейное производство,1,industry,factory,30.0
+Контрольно-измерительные приборы,1,industry,factory,30.0
+Кондитерский инвентарь,1,other,residential_or_no_jobs,0.0
+Кондитерские изделия,1,industry,workshop,5.0
+Компьютерные курсы,1,education,courses,0.5
+Кадровые агентства,1,work,professional,8.0
+Ипотечные кредиты,1,work,finance,15.0
+Кардиолог,1,health,small_clinic,1.0
+Строительные гипермаркеты,1,retail,mall,50.0
+Жир и маслопродукты,1,industry,workshop,5.0
+Животноводство,1,industry,workshop,5.0
+Жалюзи,1,work,building_materials_trade,3.0
+Доставка еды,1,other,residential_or_no_jobs,0.0
+Замки и скобяные изделия,1,work,building_materials_trade,3.0
+Занятия ЛФК,1,health,small_clinic,1.0
+Заказ трансфера,1,work,logistics,15.0
+Заказ автобусов,1,work,logistics,15.0
+Звукоизоляционные работы,1,work,construction,25.0
+Заправка картриджей,1,work,rental_office,3.0
+Строительство и обслуживание электросетей,1,work,construction,25.0
+Строительство и обслуживание фонтанов,1,work,construction,25.0
+Строительство и обслуживание наружного газоснабжения,1,work,construction,25.0
+Спецтехника,1,work,auto_service,5.0
+Средства гигиены,1,industry,workshop,5.0
+Специи,1,industry,workshop,5.0
+Гастроэнтеролог,1,health,small_clinic,1.0
+"Внутренние системы отопления, водоснабжения, канализации",1,work,construction,25.0
+Ветеринарные аптеки,1,other,residential_or_no_jobs,0.0
+"Вентиляционное, тепловое оборудование",1,work,building_materials_trade,3.0
+Интернет-провайдеры,1,work,office_it,20.0
+Изготовление печатей и штампов,1,work,rental_office,3.0
+Госпитали,1,health,hospital,20.0
+Гипермаркеты,1,retail,mall,50.0
+Дерматолог,1,health,small_clinic,1.0
+Детская мебель,1,retail,grocery_shop,1.0
+Джинсовая одежда,1,retail,grocery_shop,1.0
+Строительство спортивных сооружений,1,work,construction,25.0
+Строительство фундамента,1,work,construction,25.0
+Грузовой автосервис,1,work,auto_service,5.0
+Дата-центры,1,work,office_it,20.0
+Гидроизоляционные работы,1,work,construction,25.0
+Сумки и кожгалантерея,1,retail,grocery_shop,1.0
+Судебная и внесудебная экспертиза,1,other,residential_or_no_jobs,0.0
+Студии звукозаписи,1,work,professional,8.0
+Сырьё для пищевой промышленности,1,industry,workshop,5.0
+Теплицы,1,industry,workshop,5.0
+Такси,1,work,logistics,15.0
+Терапевт,1,health,small_clinic,1.0
+Тёплые полы,1,work,building_materials_trade,3.0
+УФ-печать,1,work,rental_office,3.0
+Электромонтажные работы,1,work,construction,25.0
+Электротехника,1,work,building_materials_trade,3.0
+Электроустановочная продукция,1,work,building_materials_trade,3.0
+Ювелирные изделия,1,retail,grocery_shop,1.0
+Ювелирные камни,1,retail,grocery_shop,1.0
+SPA-процедуры,1,health,small_clinic,1.0
+IP-телефония,1,work,office_it,20.0

@@ -1,0 +1,256 @@
+<title>Tashkent Morning Traffic</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: one working screen. Map left, live readout right; stacks on a phone. Dark by choice: a night road map. */
+:root {
+  color-scheme: dark;
+  --bg: #0a1017; --panel: #0f1822; --panel2: #15222f; --line: #1f2f40;
+  --fg: #d9e4ee; --muted: #8499ac; --dim: #4d6277; --amber: #f2b64c;
+  --r0: #3a6a9e; --r1: #3fb0a6; --r2: #e6c84a; --r3: #f08a3c; --r4: #e5484d; --idle: #182636;
+  --work: #e6c84a; --school: #4fb6e8; --college: #9b8cf0; --univ: #ec7f95;
+  --dot-free: #a9c9e6; --dot-mid: #f4c552; --dot-slow: #ff6a5c;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px; box-sizing: border-box; }
+.app { display: grid; grid-template-rows: auto 1fr; gap: 12px; height: 100%; min-height: 0; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font: 600 28px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 12px; min-height: 0; }
+.mapwrap { position: relative; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; }
+canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ctl { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 10px; align-items: center; background: color-mix(in srgb, var(--bg) 86%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+button, select { font: 500 13px var(--body); color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+button:hover, select:hover { border-color: var(--dim); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+#play { width: 74px; }
+input[type=range] { flex: 1; min-width: 0; accent-color: var(--amber); }
+.zoom { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; }
+.zoom button { width: 32px; padding: 6px 0; font-size: 16px; line-height: 1; }
+.layers { position: absolute; top: 10px; left: 10px; display: flex; gap: 12px; flex-wrap: wrap; background: color-mix(in srgb, var(--bg) 80%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--muted); }
+.layers label { display: flex; gap: 5px; align-items: center; cursor: pointer; }
+.layers input { accent-color: var(--amber); }
+aside { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.clock { font: 600 64px/0.95 var(--display); letter-spacing: .01em; font-variant-numeric: tabular-nums; }
+.slice { color: var(--muted); font: 12px var(--mono); margin-top: 4px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.stat b { display: block; font: 500 22px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: 12px; }
+h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.bar { display: flex; height: 12px; border-radius: 3px; overflow: hidden; background: var(--panel2); }
+.bar i { display: block; height: 100%; }
+.legend { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.legend span { display: flex; align-items: center; gap: 6px; }
+.legend em { font-style: normal; font-family: var(--mono); color: var(--fg); margin-left: auto; font-variant-numeric: tabular-nums; }
+.sw { width: 10px; height: 10px; border-radius: 2px; flex: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+#tl { width: 100%; height: 92px; display: block; cursor: pointer; }
+.ramp { display: flex; height: 8px; border-radius: 2px; overflow: hidden; margin: 6px 0 4px; }
+.ramp i { flex: 1; }
+.ramp-l { display: flex; justify-content: space-between; font: 11px var(--mono); color: var(--muted); }
+.note { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.note b { color: var(--fg); font-weight: 500; }
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  .app { height: auto; }
+  main { grid-template-columns: minmax(0, 1fr); }
+  .mapwrap { height: 62vh; min-height: 360px; }
+  aside { overflow: visible; }
+  .layers { font-size: 11px; gap: 8px; }
+  .clock { font-size: 54px; }
+}
+</style>
+
+<div class="app">
+  <header>
+    <h1>Tashkent Morning Traffic</h1>
+    <div class="sub">Modelled weekday, 06:00–10:00, in 15-minute steps · passenger cars</div>
+  </header>
+  <main>
+    <div class="mapwrap" id="mapwrap">
+      <canvas class="layer" id="cRoads"></canvas>
+      <canvas class="layer" id="cDots"></canvas>
+      <div class="layers">
+        <label><input type="checkbox" id="lRoads" checked> Road load</label>
+        <label><input type="checkbox" id="lDots" checked> Vehicles</label>
+        <label><input type="checkbox" id="lDist" checked> Districts</label>
+      </div>
+      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zrs" aria-label="Reset view" style="font-size:12px">⌂</button></div>
+      <div class="ctl">
+        <button id="play">Pause</button>
+        <input type="range" id="scrub" min="0" max="14399" value="5400" step="1" aria-label="Time of day">
+        <select id="spd" aria-label="Clock speed"><option value="60">60×</option><option value="120" selected>120×</option><option value="300">300×</option><option value="600">600×</option></select>
+      </div>
+    </div>
+    <aside>
+      <div class="card"><div class="clock" id="clock">07:30</div><div class="slice" id="slice"></div></div>
+      <div class="card"><div class="stats">
+        <div class="stat"><b id="sVeh">–</b><span>vehicles on the road</span></div>
+        <div class="stat"><b id="sSpd">–</b><span>average speed, km/h</span></div>
+        <div class="stat"><b id="sOver">–</b><span>road sections over capacity</span></div>
+        <div class="stat"><b id="sRate">–</b><span>vehicle trips starting per hour</span></div>
+      </div></div>
+      <div class="card"><h2>Who is driving</h2><div class="bar" id="mix"></div><div class="legend" id="mixl"></div></div>
+      <div class="card"><h2>Vehicles on the road, 06:00–10:00</h2><canvas id="tl"></canvas></div>
+      <div class="card"><h2>How to read it</h2>
+        <div class="ramp"><i style="background:var(--r0)"></i><i style="background:var(--r1)"></i><i style="background:var(--r2)"></i><i style="background:var(--r3)"></i><i style="background:var(--r4)"></i></div>
+        <div class="ramp-l"><span>empty</span><span>busy</span><span>over capacity</span></div>
+        <div class="legend" style="margin-top:10px"><span><i class="dot" style="background:var(--dot-free)"></i>free flow</span><span><i class="dot" style="background:var(--dot-mid)"></i>slowed</span><span><i class="dot" style="background:var(--dot-slow)"></i>crawling</span></div>
+        <p class="note" style="margin:10px 0 0">Each dot stands for about six cars. Road colour is traffic against capacity. <b>Model output, not measured traffic.</b> Car shares, trip timing and road capacities are assumptions; buses, trucks, taxis and the metro are not drawn.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+const D = __DATA__;
+const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
+const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
+const PTS = b64(D.pts, Uint16Array), OFF = b64(D.off, Uint32Array), FLOW = b64(D.flow, Uint16Array), RATIO = b64(D.ratio, Uint8Array);
+const CAP = b64(D.cap, Uint16Array), T0 = b64(D.t0, Uint16Array), N = D.nch, NS = D.ns, Q = D.q, COSL = Math.cos(41.3 * Math.PI / 180);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const COL = ['--r0', '--r1', '--r2', '--r3', '--r4', '--idle'].map(css), DOT = ['--dot-free', '--dot-mid', '--dot-slow'].map(css);
+
+// world coordinates (flipped y so north is up), per-chunk normals and cumulative lengths
+const NP = PTS.length / 2, WX = new Float32Array(NP), WY = new Float32Array(NP), CUM = new Float32Array(NP), TOT = new Float32Array(N), NX = new Float32Array(N), NY = new Float32Array(N);
+for (let j = 0; j < NP; j++) { WX[j] = PTS[2*j] * Q * COSL; WY[j] = -PTS[2*j+1] * Q; }
+for (let k = 0; k < N; k++) {
+  const a = OFF[k], b = OFF[k+1]; let c = 0; CUM[a] = 0;
+  for (let j = a + 1; j < b; j++) { c += Math.hypot(WX[j]-WX[j-1], WY[j]-WY[j-1]); CUM[j] = c; }
+  TOT[k] = c || 1e-9; const dx = WX[b-1]-WX[a], dy = WY[b-1]-WY[a], l = Math.hypot(dx, dy) || 1; NX[k] = -dy / l; NY[k] = dx / l;
+}
+const RINGS = D.rings.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * Q * COSL, -y * Q]) }));
+let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
+RINGS.forEach(r => r.p.forEach(([x, y]) => { bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); }));
+const RND1 = new Float32Array(N), RND2 = new Float32Array(N); { let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; for (let k = 0; k < N; k++) { RND1[k] = r(); RND2[k] = r(); } }
+
+// view
+const wrap = document.getElementById('mapwrap'), cR = document.getElementById('cRoads'), cD = document.getElementById('cDots');
+const gR = cR.getContext('2d'), gD = cD.getContext('2d'); let W = 0, H = 0, DPR = 1;
+const view = { cx: (bx0 + bx1) / 2, cy: (by0 + by1) / 2, s: 1 }; let fit = 1;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2); const r = wrap.getBoundingClientRect(); W = r.width; H = r.height;
+  [cR, cD].forEach(c => { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); });
+  const f = Math.min(W / (bx1 - bx0), H / (by1 - by0)) * 0.92; if (view.s === 1 || Math.abs(view.s / fit - 1) < 1e-6) view.s = f; fit = f; drawRoads();
+}
+const sx = x => (x - view.cx) * view.s + W / 2, sy = y => (y - view.cy) * view.s + H / 2;
+
+// state
+const st = { t: 5400, playing: true, speed: 120, slice: -1, show: { roads: true, dots: true, dist: true } };
+let act = null; // active particles
+function chunkTime(k, s) { return Math.max(0.5, T0[k] / 10 * RATIO[s*N + k] / 20); }
+function setSlice(s) {
+  st.slice = s; const K = 6, ids = [], ph = [], ts = [], cls = [];
+  for (let k = 0; k < N; k++) {
+    const f = FLOW[s*N + k]; if (f < 1) continue; const tsec = chunkTime(k, s), m = f * tsec / 3600 / K; if (m <= 0) continue;
+    const n = Math.ceil(m), ratio = RATIO[s*N + k] / 20;
+    for (let i = 0; i < n; i++) { if (i + RND1[k] >= m) continue; ids.push(k); ph.push((i + RND2[k]) / n); ts.push(tsec); cls.push(ratio < 1.25 ? 0 : ratio < 2 ? 1 : 2); }
+  }
+  act = { ids: Int32Array.from(ids), ph: Float32Array.from(ph), ts: Float32Array.from(ts), cls: Uint8Array.from(cls), n: ids.length };
+  drawRoads(); readout(s);
+}
+const NAMEFONT = '11px "IBM Plex Sans", sans-serif';
+function drawRoads() {
+  gR.setTransform(DPR, 0, 0, DPR, 0, 0); gR.clearRect(0, 0, W, H);
+  if (st.show.dist) {
+    gR.lineWidth = 1; gR.strokeStyle = css('--line'); gR.fillStyle = 'rgba(255,255,255,0.012)';
+    RINGS.forEach(r => { gR.beginPath(); r.p.forEach(([x, y], i) => i ? gR.lineTo(sx(x), sy(y)) : gR.moveTo(sx(x), sy(y))); gR.closePath(); gR.fill(); gR.stroke(); });
+  }
+  if (st.slice < 0) return;
+  if (st.show.roads) {
+    const s = st.slice, off = Math.min(2.4, 0.9 + 0.35 * Math.log2(view.s / fit + 1)), wz = 0.55 + 0.45 * Math.log2(view.s / fit + 1);
+    const paths = [new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D(), new Path2D()];
+    for (let k = 0; k < N; k++) {
+      const f = FLOW[s*N + k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b];
+      const a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(sx(WX[a]) + ox, sy(WY[a]) + oy);
+      for (let j = a + 1; j < e; j++) p.lineTo(sx(WX[j]) + ox, sy(WY[j]) + oy);
+    }
+    gR.lineCap = 'round'; gR.lineJoin = 'round';
+    [5, 0, 1, 2, 3, 4].forEach(b => { gR.strokeStyle = COL[b]; gR.lineWidth = (b === 5 ? 0.6 : 0.8 + b * 0.35) * wz; gR.globalAlpha = b === 5 ? 1 : 0.95; gR.stroke(paths[b]); });
+    gR.globalAlpha = 1;
+  }
+  if (st.show.dist && view.s / fit > 0.9) {
+    gR.font = NAMEFONT; gR.fillStyle = css('--dim'); gR.textAlign = 'center';
+    const seen = {}; RINGS.forEach(r => { if (seen[r.d]) return; seen[r.d] = 1; let mx = 0, my = 0; r.p.forEach(([x, y]) => { mx += x; my += y; }); mx /= r.p.length; my /= r.p.length; gR.fillText((NAMES[r.d] || '').toUpperCase(), sx(mx), sy(my)); });
+  }
+}
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (st.playing) { st.t += dt * st.speed; if (st.t >= 14400) st.t -= 14400; }
+  const s = Math.min(NS - 1, Math.floor(st.t / 900)); if (s !== st.slice) setSlice(s);
+  document.getElementById('clock').textContent = fmt(st.t); document.getElementById('scrub').value = Math.floor(st.t); drawTL();
+  gD.setTransform(DPR, 0, 0, DPR, 0, 0); gD.clearRect(0, 0, W, H);
+  if (st.show.dots && act) {
+    const mt = now / 1000 * 20, off = Math.min(2.4, 0.9 + 0.35 * Math.log2(view.s / fit + 1)), sz = 1.4 + 0.5 * Math.log2(view.s / fit + 1);
+    for (let c = 0; c < 3; c++) {
+      gD.fillStyle = DOT[c];
+      for (let i = 0; i < act.n; i++) {
+        if (act.cls[i] !== c) continue; const k = act.ids[i]; let u = (act.ph[i] + mt / act.ts[i]) % 1; const d = u * TOT[k], a = OFF[k], e = OFF[k+1]; let j = a + 1; while (j < e - 1 && CUM[j] < d) j++;
+        const l = CUM[j] - CUM[j-1] || 1e-9, q = (d - CUM[j-1]) / l, x = WX[j-1] + (WX[j] - WX[j-1]) * q, y = WY[j-1] + (WY[j] - WY[j-1]) * q;
+        const px = sx(x) + NX[k] * off, py = sy(y) + NY[k] * off; if (px < -4 || py < -4 || px > W + 4 || py > H + 4) continue; gD.fillRect(px - sz / 2, py - sz / 2, sz, sz);
+      }
+    }
+  }
+  requestAnimationFrame(frame);
+}
+const pad = n => String(n).padStart(2, '0'), fmt = t => { const m = Math.floor(t / 60) + 360; return pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
+
+// readout
+const MIX = [['work', 'Commuters', '--work'], ['school', 'School runs', '--school'], ['college', 'College', '--college'], ['university', 'University', '--univ']];
+const nf = n => Math.round(n).toLocaleString('en-US');
+function readout(s) {
+  const r = D.stats[s]; document.getElementById('slice').textContent = 'step ' + r.clock + '–' + fmt(s * 900 + 900) + '';
+  document.getElementById('sVeh').textContent = nf(r.veh_on_network); document.getElementById('sSpd').textContent = r.avg_speed_kmh.toFixed(1);
+  document.getElementById('sOver').textContent = nf(r.edges_vc_gt1); document.getElementById('sRate').textContent = nf(r.veh_per_hour_rate);
+  const tot = MIX.reduce((a, m) => a + r['veh_' + m[0]], 0) || 1;
+  document.getElementById('mix').innerHTML = MIX.map(m => `<i style="width:${100 * r['veh_' + m[0]] / tot}%;background:var(${m[2]})"></i>`).join('');
+  document.getElementById('mixl').innerHTML = MIX.map(m => `<span><i class="sw" style="background:var(${m[2]})"></i>${m[1]}<em>${nf(r['veh_' + m[0]])}</em></span>`).join('');
+}
+// timeline
+const cT = document.getElementById('tl'), gT = cT.getContext('2d');
+function drawTL() {
+  const r = cT.getBoundingClientRect(), w = r.width, h = r.height, d = Math.min(window.devicePixelRatio || 1, 2); if (cT.width !== Math.round(w * d)) { cT.width = Math.round(w * d); cT.height = Math.round(h * d); }
+  gT.setTransform(d, 0, 0, d, 0, 0); gT.clearRect(0, 0, w, h);
+  const v = D.stats.map(x => x.veh_on_network), mx = Math.max(...v) * 1.1, L = 4, R = 4, T = 6, B = 16, X = i => L + (w - L - R) * (i + 0.5) / NS, Y = a => T + (h - T - B) * (1 - a / mx);
+  gT.strokeStyle = css('--line'); gT.lineWidth = 1; gT.beginPath(); gT.moveTo(L, h - B); gT.lineTo(w - R, h - B); gT.stroke();
+  gT.beginPath(); gT.moveTo(X(0), h - B); v.forEach((a, i) => gT.lineTo(X(i), Y(a))); gT.lineTo(X(NS - 1), h - B); gT.closePath(); gT.fillStyle = 'rgba(242,182,76,0.16)'; gT.fill();
+  gT.beginPath(); v.forEach((a, i) => i ? gT.lineTo(X(i), Y(a)) : gT.moveTo(X(i), Y(a))); gT.strokeStyle = css('--amber'); gT.lineWidth = 1.6; gT.stroke();
+  const px = L + (w - L - R) * (st.t / 14400); gT.strokeStyle = css('--fg'); gT.lineWidth = 1; gT.beginPath(); gT.moveTo(px, T); gT.lineTo(px, h - B); gT.stroke();
+  gT.fillStyle = css('--muted'); gT.font = '10px "IBM Plex Mono", monospace'; gT.textAlign = 'left'; ['06', '07', '08', '09', '10'].forEach((t, i) => { gT.textAlign = i === 4 ? 'right' : i === 0 ? 'left' : 'center'; gT.fillText(t + ':00', L + (w - L - R) * i / 4, h - 3); });
+  const pk = v.indexOf(Math.max(...v)); gT.textAlign = 'center'; gT.fillStyle = css('--fg'); gT.fillText(nf(v[pk]), Math.min(Math.max(X(pk), 20), w - 20), Y(v[pk]) - 3);
+}
+cT.addEventListener('click', e => { const r = cT.getBoundingClientRect(); st.t = Math.max(0, Math.min(14399, (e.clientX - r.left - 4) / (r.width - 8) * 14400)); });
+
+// controls
+const $ = id => document.getElementById(id);
+$('play').onclick = () => { st.playing = !st.playing; $('play').textContent = st.playing ? 'Pause' : 'Play'; };
+$('scrub').oninput = e => { st.t = +e.target.value; };
+$('spd').onchange = e => { st.speed = +e.target.value; };
+[['lRoads', 'roads'], ['lDots', 'dots'], ['lDist', 'dist']].forEach(([id, k]) => $(id).onchange = e => { st.show[k] = e.target.checked; drawRoads(); });
+function zoomAt(f, x, y) { const wx = (x - W / 2) / view.s + view.cx, wy = (y - H / 2) / view.s + view.cy; view.s = Math.max(fit * 0.7, Math.min(fit * 40, view.s * f)); view.cx = wx - (x - W / 2) / view.s; view.cy = wy - (y - H / 2) / view.s; queue(); }
+let pend = false; const queue = () => { if (!pend) { pend = true; requestAnimationFrame(() => { pend = false; drawRoads(); }); } };
+$('zin').onclick = () => zoomAt(1.5, W / 2, H / 2); $('zout').onclick = () => zoomAt(1 / 1.5, W / 2, H / 2); $('zrs').onclick = () => { view.s = fit; view.cx = (bx0 + bx1) / 2; view.cy = (by0 + by1) / 2; drawRoads(); };
+wrap.addEventListener('wheel', e => { e.preventDefault(); const r = wrap.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+const ptr = new Map(); let pd0 = 0;
+wrap.addEventListener('pointerdown', e => { if (e.target.closest('.ctl,.zoom,.layers')) return; wrap.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pd0 = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+wrap.addEventListener('pointermove', e => {
+  if (!ptr.has(e.pointerId)) return; const p = ptr.get(e.pointerId);
+  if (ptr.size === 1) { view.cx -= (e.clientX - p[0]) / view.s; view.cy -= (e.clientY - p[1]) / view.s; queue(); }
+  ptr.set(e.pointerId, [e.clientX, e.clientY]);
+  if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = wrap.getBoundingClientRect(); if (pd0) zoomAt(d / pd0, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top); pd0 = d; }
+});
+['pointerup', 'pointercancel'].forEach(t => wrap.addEventListener(t, e => { ptr.delete(e.pointerId); pd0 = 0; }));
+window.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); $('play').click(); } });
+new ResizeObserver(resize).observe(wrap);
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { st.playing = false; $('play').textContent = 'Play'; }
+resize(); requestAnimationFrame(t => { last = t; frame(t); });
+</script>
