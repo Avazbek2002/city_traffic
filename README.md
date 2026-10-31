@@ -75,3 +75,7 @@ Every assumption can be overridden with an environment variable. The main ones:
 ## What it is not
 
 The viewer is built from the macro model. It is not a microsimulation. Each 15-minute step is solved separately with no queues carried over, and the dots follow modelled flows and speeds, not individual vehicles. Buses, trucks, taxis, the metro, and cars from outside the city are not modelled.
+
+## Trip layer (origin -> destination)
+
+`pipeline/build_trips.py` draws individual cars from the OD matrices of every 15-minute slice (1 drawn car = `SAMPLE` real cars, default 80), gives each a departure time and its congested shortest path, and writes `trips.json`. Pass that file as the 4th argument of `viewer/assemble_viewer.py`; the viewer then offers "Trips origin -> destination": each car moves along its own route, a green ring marks where it left, a white dot where it arrived, and the district selector shows only cars leaving or arriving in one district. Run it with the same `CAR_WORK` / `OCC_WORK` / `BETA_*` / `LANES_FILE` as `congestion_slices.py`, otherwise it stops or the trips will not match the slices. Intrazonal trips (inside one mahalla) are not drawn because they never load the road graph.

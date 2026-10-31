@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Tashkent Morning Traffic</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +17,7 @@
   --body: "IBM Plex Sans", system-ui, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, monospace;
 }
+[hidden] { display: none !important; }
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); margin: 0;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px; box-sizing: border-box; }
@@ -82,12 +84,15 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
         <label><input type="checkbox" id="lRoads" checked> Road load</label>
         <label><input type="checkbox" id="lDots" checked> Vehicles</label>
         <label><input type="checkbox" id="lDist" checked> Districts</label>
+        <label><input type="checkbox" id="lTrips"> Trips origin → destination</label>
       </div>
       <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zrs" aria-label="Reset view" style="font-size:12px">⌂</button></div>
       <div class="ctl">
         <button id="play">Pause</button>
         <input type="range" id="scrub" min="0" max="14399" value="5400" step="1" aria-label="Time of day">
         <select id="spd" aria-label="Clock speed"><option value="60">60×</option><option value="120" selected>120×</option><option value="300">300×</option><option value="600">600×</option></select>
+        <select id="foc" aria-label="Show trips of one district" title="Only trips that start or end in this district" hidden><option value="0">All districts</option></select>
+        <select id="fdir" aria-label="Trip direction" hidden><option value="any">from or to</option><option value="from">leaving</option><option value="to">arriving</option></select>
         <select id="upd" aria-label="Traffic update interval" title="How often the traffic picture updates"><option value="900">Update 15 min</option><option value="300" selected>Update 5 min</option><option value="60">Update 1 min</option></select>
       </div>
     </div>
@@ -105,6 +110,7 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
         <div class="ramp"><i style="background:var(--r0)"></i><i style="background:var(--r1)"></i><i style="background:var(--r2)"></i><i style="background:var(--r3)"></i><i style="background:var(--r4)"></i></div>
         <div class="ramp-l"><span>empty</span><span>busy</span><span>over capacity</span></div>
         <div class="legend" style="margin-top:10px"><span><i class="dot" style="background:var(--dot-free)"></i>free flow</span><span><i class="dot" style="background:var(--dot-mid)"></i>slowed</span><span><i class="dot" style="background:var(--dot-slow)"></i>crawling</span></div>
+        <div class="legend" id="tlegend" hidden style="margin-top:10px"><span><i class="dot" style="background:var(--work)"></i>commuter</span><span><i class="dot" style="background:var(--school)"></i>school run</span><span><i class="dot" style="background:var(--college)"></i>college</span><span><i class="dot" style="background:var(--univ)"></i>university</span><span><i class="dot" style="background:none;border:2px solid #7ee0a3;box-sizing:border-box"></i>origin</span><span><i class="dot" style="background:#fff"></i>destination</span></div>
         <p class="note" style="margin:10px 0 0">Each dot stands for about six cars. Road colour is traffic against capacity. <b>Model output, not measured traffic.</b> Car shares, trip timing and road capacities are assumptions; buses, trucks, taxis and the metro are not drawn.</p>
       </div>
     </aside>
@@ -113,6 +119,7 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
 
 <script>
 const D = __DATA__;
+const TR = __TRIPS__;
 const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
 const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
 const PTS = b64(D.pts, Uint16Array), OFF = b64(D.off, Uint32Array), FLOW = b64(D.flow, Uint16Array), RATIO = b64(D.ratio, Uint8Array);
@@ -145,7 +152,7 @@ function resize() {
 const sx = x => (x - view.cx) * view.s + W / 2, sy = y => (y - view.cy) * view.s + H / 2;
 
 // state
-const st = { t: 5400, playing: true, speed: 120, step: 300, slice: -1, show: { roads: true, dots: true, dist: true } };
+const st = { t: 5400, playing: true, speed: 120, step: 300, slice: -1, show: { roads: true, dots: true, dist: true, trips: false } };
 let act = null; // active particles
 const SEC = 14400 / NS, CF = new Float32Array(N), CR = new Float32Array(N);
 function sample(bin) {   // blend the two nearest 15-minute model steps, linear between their mid-points
@@ -189,6 +196,43 @@ function drawRoads() {
     const seen = {}; RINGS.forEach(r => { if (seen[r.d]) return; seen[r.d] = 1; let mx = 0, my = 0; r.p.forEach(([x, y]) => { mx += x; my += y; }); mx /= r.p.length; my /= r.p.length; gR.fillText((NAMES[r.d] || '').toUpperCase(), sx(mx), sy(my)); });
   }
 }
+
+// ---- trip layer: sampled individual cars, each drawn along its own route between its origin and destination
+const TRC = ['--work', '--school', '--college', '--univ'].map(css);
+let TP = null;
+if (TR) {
+  const n = TR.n, X = b64(TR.x, Uint16Array), Y = b64(TR.y, Uint16Array), TQ = b64(TR.tq, Uint16Array), OF = b64(TR.off, Uint32Array), DEP = b64(TR.dep, Uint16Array), PU = b64(TR.pur, Uint8Array), O = b64(TR.o, Uint16Array), De = b64(TR.d, Uint16Array);
+  const TX = new Float32Array(X.length), TY = new Float32Array(X.length), TTm = new Float32Array(X.length);
+  for (let j = 0; j < X.length; j++) { TX[j] = X[j] * Q * COSL; TY[j] = -Y[j] * Q; TTm[j] = TQ[j] / 10; }
+  const ZX = TR.zones.map(z => z.x * Q * COSL), ZY = TR.zones.map(z => -z.y * Q);
+  const arr = new Float32Array(n); for (let i = 0; i < n; i++) arr[i] = DEP[i] + TTm[OF[i+1] - 1];
+  TP = { n, TX, TY, TTm, OF, DEP, PU, O, De, arr, ZX, ZY, Z: TR.zones, K: TR.k, foc: 0, dir: 'any' };
+  const fo = document.getElementById('foc'); [...new Set(TR.zones.map(z => z.d))].sort().forEach(d => fo.insertAdjacentHTML('beforeend', `<option value="${d}">${NAMES[d] || d}</option>`));
+}
+function tripMatch(i) {
+  if (!TP.foc) return true; const od = TP.Z[TP.O[i]].d === TP.foc, dd = TP.Z[TP.De[i]].d === TP.foc;
+  return TP.dir === 'from' ? od : TP.dir === 'to' ? dd : (od || dd);
+}
+function drawTrips() {
+  if (!TP) return; const t = st.t, sz = 2.6 + 0.9 * Math.log2(view.s / fit + 1); let live = 0;
+  const focus = !!TP.foc; gD.lineWidth = 1;
+  for (let i = 0; i < TP.n; i++) {
+    const dep = TP.DEP[i], rel = t - dep; if (rel < -60 || rel > TP.arr[i] - dep + 90) continue; if (!tripMatch(i)) continue;
+    const a = TP.OF[i], e = TP.OF[i+1], dur = TP.arr[i] - dep, c = TRC[TP.PU[i]];
+    // origin ring (fades after departure) and destination marker (appears on arrival, then fades)
+    if (rel < 0 || rel < 90) { gD.strokeStyle = '#7ee0a3'; gD.globalAlpha = rel < 0 ? 0.9 : 0.9 * (1 - rel / 90); gD.beginPath(); gD.arc(sx(TP.TX[a]), sy(TP.TY[a]), sz * 1.8, 0, 6.2832); gD.stroke(); }
+    if (rel >= dur) { gD.fillStyle = '#ffffff'; gD.globalAlpha = 0.9 * Math.max(0, 1 - (rel - dur) / 90); gD.beginPath(); gD.arc(sx(TP.TX[e-1]), sy(TP.TY[e-1]), sz * 1.4, 0, 6.2832); gD.fill(); continue; }
+    if (rel < 0) continue;
+    let j = a + 1; while (j < e - 1 && TP.TTm[j] < rel) j++;
+    const dt = TP.TTm[j] - TP.TTm[j-1] || 1e-9, q = Math.min(1, Math.max(0, (rel - TP.TTm[j-1]) / dt)), x = TP.TX[j-1] + (TP.TX[j] - TP.TX[j-1]) * q, y = TP.TY[j-1] + (TP.TY[j] - TP.TY[j-1]) * q;
+    live++;
+    if (focus || view.s / fit > 2.5) {   // route trail from origin to the car when zoomed in or focused
+      gD.strokeStyle = c; gD.globalAlpha = 0.28; gD.beginPath(); gD.moveTo(sx(TP.TX[a]), sy(TP.TY[a])); for (let m = a + 1; m < j; m++) gD.lineTo(sx(TP.TX[m]), sy(TP.TY[m])); gD.lineTo(sx(x), sy(y)); gD.stroke();
+    }
+    gD.globalAlpha = 1; gD.fillStyle = c; gD.beginPath(); gD.arc(sx(x), sy(y), sz, 0, 6.2832); gD.fill();
+  }
+  gD.globalAlpha = 1; return live;
+}
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
@@ -196,7 +240,8 @@ function frame(now) {
   const bin = Math.floor(st.t / st.step); if (bin !== st.slice) setBin(bin);
   document.getElementById('clock').textContent = fmt(st.t); document.getElementById('scrub').value = Math.floor(st.t); drawTL();
   gD.setTransform(DPR, 0, 0, DPR, 0, 0); gD.clearRect(0, 0, W, H);
-  if (st.show.dots && act) {
+  if (st.show.trips) drawTrips();
+  if (st.show.dots && act && !st.show.trips) {
     const mt = now / 1000 * 20, off = Math.min(2.4, 0.9 + 0.35 * Math.log2(view.s / fit + 1)), sz = 1.4 + 0.5 * Math.log2(view.s / fit + 1);
     for (let c = 0; c < 3; c++) {
       gD.fillStyle = DOT[c];
@@ -245,6 +290,9 @@ $('scrub').oninput = e => { st.t = +e.target.value; };
 $('spd').onchange = e => { st.speed = +e.target.value; };
 $('upd').onchange = e => { st.step = +e.target.value; st.slice = -1; };
 [['lRoads', 'roads'], ['lDots', 'dots'], ['lDist', 'dist']].forEach(([id, k]) => $(id).onchange = e => { st.show[k] = e.target.checked; drawRoads(); });
+if (!TP) $('lTrips').parentElement.hidden = true;
+$('lTrips').onchange = e => { st.show.trips = e.target.checked; ['foc', 'fdir', 'tlegend'].forEach(id => $(id).hidden = !st.show.trips); };
+$('foc').onchange = e => { TP.foc = +e.target.value; }; $('fdir').onchange = e => { TP.dir = e.target.value; };
 function zoomAt(f, x, y) { const wx = (x - W / 2) / view.s + view.cx, wy = (y - H / 2) / view.s + view.cy; view.s = Math.max(fit * 0.7, Math.min(fit * 40, view.s * f)); view.cx = wx - (x - W / 2) / view.s; view.cy = wy - (y - H / 2) / view.s; queue(); }
 let pend = false; const queue = () => { if (!pend) { pend = true; requestAnimationFrame(() => { pend = false; drawRoads(); }); } };
 $('zin').onclick = () => zoomAt(1.5, W / 2, H / 2); $('zout').onclick = () => zoomAt(1 / 1.5, W / 2, H / 2); $('zrs').onclick = () => { view.s = fit; view.cx = (bx0 + bx1) / 2; view.cy = (by0 + by1) / 2; drawRoads(); };

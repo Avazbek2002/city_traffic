@@ -21,5 +21,6 @@ python3 pipeline/build_travel_times.py "$W/road_edges.csv.gz" "$W/mahalla_zones.
 python3 pipeline/congestion_loop.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/loop" am0809    # 9 one-hour equilibrium (am0809 or am0708)
 python3 pipeline/congestion_slices.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/slices"        # 10 sixteen 15-minute slices (~15 min)
 python3 viewer/prep_viewer_data.py "$W/slices/slices_flow.npz" "$W/slices/slice_stats.csv" "$DIST" "$W/viewer_data.json"             # 11 pack for the viewer
-python3 viewer/assemble_viewer.py viewer/viewer_template.html "$W/viewer_data.json" viewer/index.html                                # 12 build the page
+python3 pipeline/build_trips.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/slices/slices_flow.npz" "$W/trips.json"   # 12 sample individual cars (origin -> destination + route); same env vars as step 10
+python3 viewer/assemble_viewer.py viewer/viewer_template.html "$W/viewer_data.json" viewer/index.html "$W/trips.json"                    # 13 build the page
 echo "Done. Open viewer/index.html in a browser."
