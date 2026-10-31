@@ -103,9 +103,17 @@ PROFILE = {
  'school':     [.005,.005,.01,.02, .10,.17,.23,.25, .08,.04,.02,.01, .01,.005,.003,.002],
  'college':    [.01,.01,.03,.04, .09,.14,.18,.19, .10,.07,.05,.03, .02,.01,.01,.01],
  'university': [.005,.005,.01,.03, .08,.11,.14,.17, .16,.12,.08,.04, .02,.01,.01,.01]}
+# sensitivity switches (defaults = base case). WORK_PROFILE: base | early30 (arrivals 30 min earlier) | mix (half start 08:00, half 09:00)
+def _shift(p, k): q = p[k:] + [0.0]*k; f = sum(p)/sum(q); return [v*f for v in q]
+_wp = os.environ.get('WORK_PROFILE', 'base'); W0 = PROFILE['work']
+if _wp == 'early30': PROFILE['work'] = _shift(W0, 2)
+elif _wp == 'mix': PROFILE['work'] = [0.5*a + 0.5*b for a, b in zip(W0, _shift(W0, 4))]
+elif _wp != 'base': raise SystemExit('WORK_PROFILE must be base, early30 or mix')
+cap = cap*E('CAP_SCALE', 1.0)
+S0, S1 = [int(v) for v in os.environ.get('SLICES', '0:16').split(':')]     # run only slices S0..S1-1 (for quick tests)
 NS = 16
 x = np.zeros(ne); t = t0s.copy(); FL = []; TT = []; stats = []
-for s_ in range(NS):
+for s_ in range(S0, S1):
     sh = {p: PROFILE[p][s_] for p in PUR}
     for it in range(1, ITERS+1):
         T, _ = zone_times_and_assign(t)
