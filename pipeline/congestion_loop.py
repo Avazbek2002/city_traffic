@@ -10,7 +10,7 @@ EF, ZN, PA, OUT = sys.argv[1:5]; SC = sys.argv[5] if len(sys.argv) > 5 else 'am0
 os.makedirs(OUT, exist_ok=True); E = lambda k, d: float(os.environ.get(k, d))
 # ------------------------------------------------------------------ ASSUMPTIONS
 BETA = {'work': E('BETA_WORK', 0.08), 'school': E('BETA_SCHOOL', 0.30), 'college': E('BETA_COLLEGE', 0.10), 'university': E('BETA_UNIVERSITY', 0.03)}  # 1/min decay on congested time
-CAR = {'work': E('CAR_WORK', 0.35), 'school': 0.10, 'college': 0.02, 'university': 0.02}   # car share of person trips
+CAR = {'work': E('CAR_WORK', 0.45), 'school': 0.10, 'college': 0.02, 'university': 0.02}   # car share of person trips
 OCC = {'work': E('OCC_WORK', 1.15), 'school': 1.3, 'college': 1.3, 'university': 1.3}      # persons per car
 HOUR = {'am0809': {'work': 0.45, 'school': 0.15, 'college': 0.25, 'university': 0.40},     # share of the purpose's morning trips in the hour
         'am0708': {'work': 0.15, 'school': 0.75, 'college': 0.60, 'university': 0.50}}[SC]

@@ -57,7 +57,7 @@ Every assumption can be overridden with an environment variable. The main ones:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `CAR_WORK` | 0.35 | share of commuters driving |
+| `CAR_WORK` | 0.45 | share of commuters driving |
 | `OCC_WORK` | 1.15 | people per car for commuters |
 | `BETA_WORK`, `BETA_SCHOOL`, `BETA_COLLEGE`, `BETA_UNIVERSITY` | 0.08, 0.30, 0.10, 0.03 | distance decay per minute |
 | `ITERS` | 15 (loop), 4 (slices) | equilibrium iterations |

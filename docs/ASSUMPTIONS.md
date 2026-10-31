@@ -5,7 +5,7 @@ Everything below is a placeholder to be replaced by data. "Where" gives the file
 | Area | Assumption | Where |
 |---|---|---|
 | Work demand | one commuter per job (`employment` column, meaning unconfirmed: jobs in the mahalla or employed residents) | `build_od.py`, `congestion_*.py` |
-| Commuter mode | 35% drive, 1.15 people per car | `CAR_WORK`, `OCC_WORK` |
+| Commuter mode | 45% drive (placeholder, uncalibrated), 1.15 people per car | `CAR_WORK`, `OCC_WORK` |
 | Student mode | school 10% car (drop-off, both legs), college 2%, university 2%; the rest walk or use public transport | `build_student_od.py` `MODE`, `congestion_*.py` `CAR` |
 | School production | ages 6-15 plus half of ages 16-17 | `build_student_od.py` `SHARE_1617_SCHOOL` |
 | College production | half of ages 16-17 plus 15% of ages 18-19 | `SHARE_1617_SCHOOL`, `COLLEGE_1819` |
