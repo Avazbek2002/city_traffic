@@ -88,7 +88,7 @@ function scene1(sec) {
   const cap = sec < 1.7 ? 'Around 08:45 the commuter wave peaks. Red roads are over capacity.' : sec < 2.7 ? 'Rewinding to 06:00\u2026' : t < 3600 ? 'The city wakes up. Few cars, free-flowing roads.' : t < 8100 ? 'School runs and early commuters begin to fill the main roads.' : t < 11700 ? 'Around 08:45 the commuter wave peaks. Red roads are over capacity.' : 'By 09:30 the wave has passed.';
   wrap(cap, 54, 1272, W - 108, 27, FG, 34); footnote();
   legendRamp(W - 54 - 120, 1098, RC.slice(0, 5), 'empty', 'over capacity');
-  if (sec < 2.2) { const a = sec < 1.5 ? 1 : 1 - (sec - 1.5) / 0.7; g.fillStyle = `rgba(10,16,23,${0.62 * a})`; g.fillRect(0, 300, W, 330); text('Why is your morning', W / 2, 440, 92, FG, { w: 'bold', f: FD, a: 'center', al: a }); text('commute so slow?', W / 2, 545, 92, AMB, { w: 'bold', f: FD, a: 'center', al: a }); }
+  if (sec < 2.2) { const a = sec < 1.5 ? 1 : 1 - (sec - 1.5) / 0.7; g.fillStyle = `rgba(10,16,23,${0.62 * a})`; g.fillRect(0, 300, W, 330); text('Morning traffic', W / 2, 440, 104, FG, { w: 'bold', f: FD, a: 'center', al: a }); text('simulation', W / 2, 555, 104, AMB, { w: 'bold', f: FD, a: 'center', al: a }); }
 }
 function scene2(sec, now) {
   const t = clamp((sec - S2[0]) / 14.5, 0, 1) * 16200;
