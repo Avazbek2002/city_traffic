@@ -113,13 +113,29 @@ def _shift(p, k): q = p[k:] + [0.0]*k; f = sum(p)/sum(q); return [v*f for v in q
 _wp = os.environ.get('WORK_PROFILE', 'base'); W0 = PROFILE['work']
 if _wp == 'early30': PROFILE['work'] = _shift(W0, 2)
 elif _wp == 'mix': PROFILE['work'] = [0.5*a + 0.5*b for a, b in zip(W0, _shift(W0, 4))]
-elif _wp != 'base': raise SystemExit('WORK_PROFILE must be base, early30 or mix')
+elif _wp in ('start9', 'stagger', 'zones'):
+    # START-TIME SCENARIOS (ASSUMPTION: a worker leaves home between 45 and 5 minutes before the work start, evenly). Shift workers who leave before 08:00 (slices 0-7 of the base profile) are kept as they are;
+    # the remaining base mass (08:00 onwards) is re-assigned to the start times below. start9: everybody 09:00. stagger: a quarter each at 08:30 / 09:00 / 09:30 / 10:00 at every workplace.
+    # zones: every workplace mahalla gets ONE start time from WORK_CLASS_FILE (csv: zone_row, start_min).
+    def _kern(S): return [max(0.0, min(360+15*j+15, S-5) - max(360+15*j, S-45))/40.0 for j in range(16)]
+    _mass = sum(W0[8:]); _early = W0[:8] + [0.0]*8
+    _prof = lambda ws: [a + _mass*sum(w*_kern(S)[j] for S, w in ws) for j, a in enumerate(_early)]
+    if _wp == 'start9': PROFILE['work'] = _prof([(540, 1.0)])
+    elif _wp == 'stagger': PROFILE['work'] = _prof([(510, .25), (540, .25), (570, .25), (600, .25)])
+    else:
+        _cl = pd.read_csv(os.environ['WORK_CLASS_FILE']); _st = np.full(n, 540.0); _st[_cl.zone_row.values] = _cl.start_min.values
+        WPD = np.array([_prof([(S, 1.0)]) for S in _st])         # n x 16: work departure profile of trips going TO each workplace zone
+        PROFILE['work'] = list(WPD.mean(0))
+        print('zones: start-time shares by jobs', {int(S): round(float(A['work'][_st == S].sum()/A['work'].sum()), 3) for S in np.unique(_st)})
+    print('work profile', [round(v, 3) for v in PROFILE['work']], 'sum', round(sum(PROFILE['work']), 3))
+elif _wp != 'base': raise SystemExit('WORK_PROFILE must be base, early30, mix, start9, stagger or zones')
 cap = cap*E('CAP_SCALE', 1.0)
 S0, S1 = [int(v) for v in os.environ.get('SLICES', '0:16').split(':')]     # run only slices S0..S1-1 (for quick tests)
 NS = 16
 x = np.zeros(ne); t = t0s.copy(); FL = []; TT = []; stats = []
 for s_ in range(S0, S1):
     sh = {p: PROFILE[p][s_] for p in PUR}
+    if _wp == 'zones': sh['work'] = WPD[:, s_]            # per-destination profile: multiplies the columns of the OD matrix
     for it in range(1, ITERS+1):
         T, _ = zone_times_and_assign(t)
         M, veh, Tm = demand(T, sh)
@@ -127,7 +143,7 @@ for s_ in range(S0, S1):
         x = y if it == 1 else x + (y-x)/it
         t = bpr(x)
     vht = float((x*t).sum()/3600); vkt = float((x*length).sum()/1000)
-    pv = {p: float(M[p].sum()*CAR[p]/OCC[p]*sh[p]*4*(2 if p == 'school' else 1)) for p in PUR}
+    pv = {p: float((M[p]*sh[p]).sum()*CAR[p]/OCC[p]*4*(2 if p == 'school' else 1)) for p in PUR}
     stats.append(dict(slice=s_, clock=f'{6+s_//4:02d}:{15*(s_%4):02d}', veh_per_hour_rate=round(float(veh.sum())), veh_on_network=round(vht), avg_speed_kmh=round(vkt/vht, 1) if vht else 0,
                       edges_vc_gt1=int((x/cap > 1).sum()), **{f'veh_{p}': round(v) for p, v in pv.items()}, **{f'mean_min_{p}': round(float((M[p]*Tm).sum()/M[p].sum()), 1) for p in PUR}))
     FL.append(x.astype(np.float32)); TT.append(t.astype(np.float32)); print(stats[-1], f'[{time.time()-t0:.0f}s]', flush=True)
