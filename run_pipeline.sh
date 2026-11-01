@@ -23,4 +23,6 @@ python3 pipeline/congestion_slices.py "$W/road_edges.csv.gz" "$W/mahalla_zones.c
 python3 viewer/prep_viewer_data.py "$W/slices/slices_flow.npz" "$W/slices/slice_stats.csv" "$DIST" "$W/viewer_data.json"             # 11 pack for the viewer
 python3 pipeline/build_trips.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/slices/slices_flow.npz" "$W/trips.json"   # 12 sample individual cars (origin -> destination + route); same env vars as step 10
 python3 viewer/assemble_viewer.py viewer/viewer_template.html "$W/viewer_data.json" viewer/index.html "$W/trips.json"                    # 13 build the page
-echo "Done. Open viewer/index.html in a browser."
+python3 pipeline/build_od_graph.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/slices/slices_flow.npz" "$DIST" "$W/od_graph.json"   # 14 zone graph data (people per district / mahalla over time)
+python3 viewer/assemble_viewer.py viewer/od_graph_template.html "$W/od_graph.json" viewer/od_graph.html                                                          # 15 build the graph page
+echo "Done. Open viewer/index.html (roads) and viewer/od_graph.html (district / mahalla graph) in a browser."

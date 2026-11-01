@@ -1,0 +1,176 @@
+<meta charset="utf-8">
+<title>Tashkent Morning Flows</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+[hidden] { display: none !important; }
+:root {
+  color-scheme: dark;
+  --bg: #0a1017; --panel: #0f1822; --panel2: #15222f; --line: #1f2f40;
+  --fg: #d9e4ee; --muted: #8499ac; --dim: #4d6277; --amber: #f2b64c;
+  --gain: #3fd0b0; --lose: #f0643c; --flat: #6d8299;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif; --body: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); margin: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px; box-sizing: border-box; }
+.app { display: grid; grid-template-rows: auto 1fr; gap: 12px; height: 100%; min-height: 0; }
+header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 { font: 600 28px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); font-size: 13px; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 12px; min-height: 0; }
+.mapwrap { position: relative; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; }
+canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ctl { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; background: color-mix(in srgb, var(--bg) 86%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+button, select { font: 500 13px var(--body); color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 6px 10px; cursor: pointer; }
+button:hover, select:hover { border-color: var(--dim); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+#play { width: 74px; }
+input[type=range] { flex: 1 1 160px; min-width: 160px; accent-color: var(--amber); }
+.seg { position: absolute; top: 10px; left: 10px; display: flex; gap: 0; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: color-mix(in srgb, var(--bg) 80%, transparent); }
+.seg button { border: 0; border-radius: 0; background: transparent; padding: 7px 14px; color: var(--muted); }
+.seg button[aria-pressed=true] { background: var(--panel2); color: var(--fg); box-shadow: inset 0 -2px var(--amber); }
+.opts { position: absolute; top: 52px; left: 10px; display: flex; gap: 12px; flex-wrap: wrap; background: color-mix(in srgb, var(--bg) 80%, transparent); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 12px; color: var(--muted); }
+.opts label { display: flex; gap: 5px; align-items: center; cursor: pointer; } .opts input { accent-color: var(--amber); }
+.zoom { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 4px; } .zoom button { width: 32px; padding: 6px 0; font-size: 16px; line-height: 1; }
+#tip { position: absolute; pointer-events: none; background: var(--panel2); border: 1px solid var(--dim); border-radius: 5px; padding: 7px 10px; font-size: 12px; line-height: 1.5; white-space: nowrap; z-index: 3; }
+#tip b { font-weight: 600; } #tip .m { font-family: var(--mono); }
+aside { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.clock { font: 600 64px/0.95 var(--display); font-variant-numeric: tabular-nums; } .slice { color: var(--muted); font: 12px var(--mono); margin-top: 4px; }
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; } .stat b { display: block; font: 500 22px/1.1 var(--mono); font-variant-numeric: tabular-nums; } .stat span { color: var(--muted); font-size: 12px; }
+h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.rank { display: grid; grid-template-columns: 1fr auto; gap: 3px 10px; font-size: 12px; } .rank em { font: normal 12px var(--mono); font-variant-numeric: tabular-nums; text-align: right; } .rank .g { color: var(--gain); } .rank .l { color: var(--lose); }
+.rank span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#tl { width: 100%; height: 80px; display: block; cursor: pointer; }
+.ramp { display: flex; height: 8px; border-radius: 2px; overflow: hidden; margin: 6px 0 4px; } .ramp i { flex: 1; } .ramp-l { display: flex; justify-content: space-between; font: 11px var(--mono); color: var(--muted); }
+.note { color: var(--muted); font-size: 12px; line-height: 1.5; } .note b { color: var(--fg); font-weight: 500; }
+@media (max-width: 900px) { html, body { height: auto; } .app { height: auto; } main { grid-template-columns: minmax(0, 1fr); } .mapwrap { height: 62vh; min-height: 380px; } aside { overflow: visible; } .clock { font-size: 54px; } }
+</style>
+<div class="app">
+  <header><h1>Tashkent Morning Flows</h1><div class="sub">People who make a morning trip, 06:00–11:00 · circle size = people currently in the area</div></header>
+  <main>
+    <div class="mapwrap" id="wrap">
+      <canvas class="layer" id="cv"></canvas>
+      <div class="seg" role="group" aria-label="Level"><button id="bD" aria-pressed="true">Districts</button><button id="bM" aria-pressed="false">Mahallas</button></div>
+      <div class="opts"><label><input type="checkbox" id="oArc" checked> Flows</label><label><input type="checkbox" id="oGhost" checked> Starting size</label><label><input type="checkbox" id="oLab" checked> Names</label></div>
+      <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zrs" aria-label="Reset view" style="font-size:12px">⌂</button></div>
+      <div id="tip" hidden></div>
+      <div class="ctl"><button id="play">Pause</button><input type="range" id="scrub" min="0" max="17999" value="0" step="1" aria-label="Time of day"><select id="spd" aria-label="Clock speed"><option value="120">120×</option><option value="300" selected>300×</option><option value="600">600×</option><option value="1200">1200×</option></select></div>
+    </div>
+    <aside>
+      <div class="card"><div class="clock" id="clock">06:00</div><div class="slice" id="phase"></div></div>
+      <div class="card"><div class="stats"><div class="stat"><b id="sMove">–</b><span>people on the move now</span></div><div class="stat"><b id="sDone">–</b><span>arrived at their destination</span></div></div></div>
+      <div class="card"><h2 id="hGain">Growing most</h2><div class="rank" id="gain"></div><h2 style="margin-top:12px" id="hLose">Shrinking most</h2><div class="rank" id="lose"></div></div>
+      <div class="card"><h2>People on the move</h2><canvas id="tl"></canvas></div>
+      <div class="card"><h2>How to read it</h2>
+        <div class="ramp"><i style="background:#f0643c"></i><i style="background:#b9714f"></i><i style="background:#6d8299"></i><i style="background:#4fb39e"></i><i style="background:#3fd0b0"></i></div>
+        <div class="ramp-l"><span>emptied</span><span>as at 06:00</span><span>filled</span></div>
+        <p class="note" style="margin:10px 0 0">Circle area follows the people in the area; the dashed ring is its size at 06:00. Arcs are people leaving in the current 15 minutes. <b>Model output.</b> Counts cover everyone who makes a modelled morning trip (work, school, college, university; every mode), not the whole population. Arrival times use car travel times for everybody, so walkers and bus riders arrive earlier here than in reality.</p>
+      </div>
+    </aside>
+  </main>
+</div>
+<script>
+const D = __DATA__;
+const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
+const $ = id => document.getElementById(id), COSL = Math.cos(41.3 * Math.PI / 180), NB = D.nb, BIN = D.bin, TMAX = NB * BIN * 60, DEPEND = D.ns * 900;
+const L = {
+  dist: { name: D.dist.id.map(d => NAMES[d] || d), x: D.dist.x, y: D.dist.y, base: D.dist.base, pres: D.dist.present, rmax: 34, rmin: 4 },
+  mah: { name: D.mah.name, x: D.mah.x, y: D.mah.y, base: D.mah.base, pres: D.mah.present, rmax: 15, rmin: 1.3, d: D.mah.d }
+};
+for (const k in L) { const l = L[k]; l.n = l.x.length; l.wx = l.x.map(v => v * COSL); l.wy = l.y.map(v => -v); l.max = Math.max(...l.pres.flat(), ...l.base); }
+const RINGS = D.rings.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * COSL, -y]) }));
+let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9; RINGS.forEach(r => r.p.forEach(([x, y]) => { bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); }));
+const wrap = $('wrap'), cv = $('cv'), g = cv.getContext('2d'); let W = 0, H = 0, DPR = 1, fit = 1; const view = { cx: (bx0 + bx1) / 2, cy: (by0 + by1) / 2, s: 1 };
+const sx = x => (x - view.cx) * view.s + W / 2, sy = y => (y - view.cy) * view.s + H / 2;
+const st = { t: 0, playing: true, speed: 300, lvl: 'dist', arcs: true, ghost: true, labels: true, hover: -1 };
+function resize() { DPR = Math.min(devicePixelRatio || 1, 2); const r = wrap.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); const f = Math.min(W / (bx1 - bx0), H / (by1 - by0)) * 0.92; if (view.s === 1 || Math.abs(view.s / fit - 1) < 1e-6) view.s = f; fit = f; }
+const lerp = (a, b, w) => a + (b - a) * w;
+let PR = new Float32Array(0), CUR = null;
+function presentAt(l, t) { const p = Math.min(NB - 1e-6, t / (BIN * 60)), i = Math.floor(p), w = p - i, a = l.pres[i], b = l.pres[i + 1]; if (PR.length < l.n) PR = new Float32Array(l.n); for (let k = 0; k < l.n; k++) PR[k] = lerp(a[k], b[k], w); return PR; }
+const pad = n => String(n).padStart(2, '0'), fmt = t => { const m = Math.floor(t / 60) + 360; return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); }, nf = n => Math.round(n).toLocaleString('en-US');
+function color(ratio) { const v = Math.max(-1, Math.min(1, Math.log2(Math.max(ratio, 0.01)) / 1.6)); if (v < 0) { const k = -v; return `rgb(${Math.round(lerp(109, 240, k))},${Math.round(lerp(130, 100, k))},${Math.round(lerp(153, 60, k))})`; } return `rgb(${Math.round(lerp(109, 63, v))},${Math.round(lerp(130, 208, v))},${Math.round(lerp(153, 176, v))})`; }
+const rad = (l, v) => Math.max(l.rmin, l.rmax * Math.sqrt(v / l.max)) * Math.min(2.2, Math.max(0.8, Math.pow(view.s / fit, 0.35)));
+function arcPts(x0, y0, x1, y1) { const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, dx = x1 - x0, dy = y1 - y0, c = 0.18; return [mx - dy * c, my + dx * c]; }
+function flowsNow(l) {
+  const s = Math.floor(st.t / 900); if (s >= D.ns) return [];
+  if (st.lvl === 'dist') { const m = D.dist.flow[s], out = []; for (let i = 0; i < l.n; i++) for (let j = 0; j < l.n; j++) if (m[i][j] > 50) out.push([i, j, m[i][j]]); return out; }
+  return D.mah.links[s].slice(0, 160);
+}
+function draw(now) {
+  g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+  g.lineWidth = 1; g.strokeStyle = '#1f2f40'; g.fillStyle = 'rgba(255,255,255,0.012)';
+  RINGS.forEach(r => { g.beginPath(); r.p.forEach(([x, y], i) => i ? g.lineTo(sx(x), sy(y)) : g.moveTo(sx(x), sy(y))); g.closePath(); g.fill(); g.stroke(); });
+  const l = L[st.lvl], pr = presentAt(l, st.t), zs = Math.min(2.2, Math.max(0.8, Math.pow(view.s / fit, 0.35)));
+  if (st.arcs) {
+    const fl = flowsNow(l), mx = Math.max(1, ...fl.map(f => f[2])); g.lineCap = 'round';
+    for (const [i, j, v] of fl) {
+      const x0 = sx(l.wx[i]), y0 = sy(l.wy[i]), x1 = sx(l.wx[j]), y1 = sy(l.wy[j]), [cx, cy] = arcPts(x0, y0, x1, y1), w = (st.lvl === 'dist' ? 0.6 + 6 * Math.sqrt(v / mx) : 0.4 + 2.2 * Math.sqrt(v / mx)) * zs;
+      g.strokeStyle = 'rgba(242,182,76,' + (st.lvl === 'dist' ? 0.16 + 0.3 * v / mx : 0.12 + 0.3 * v / mx) + ')'; g.lineWidth = w; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(cx, cy, x1, y1); g.stroke();
+      const nd = Math.min(6, 1 + Math.floor(5 * v / mx)); g.fillStyle = '#ffd98a';
+      for (let q = 0; q < nd; q++) { const u = ((now / 1000) * 0.35 + q / nd + (i * 7 + j * 13) % 10 / 10) % 1, a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; g.beginPath(); g.arc(a * x0 + b * cx + c * x1, a * y0 + b * cy + c * y1, (st.lvl === 'dist' ? 2.2 : 1.3) * zs, 0, 6.2832); g.fill(); }
+    }
+  }
+  if (st.ghost) { g.setLineDash([3, 3]); g.strokeStyle = 'rgba(217,228,238,0.35)'; g.lineWidth = 1; for (let k = 0; k < l.n; k++) { if (l.base[k] <= 0) continue; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), rad(l, l.base[k]), 0, 6.2832); g.stroke(); } g.setLineDash([]); }
+  const order = Array.from({ length: l.n }, (_, k) => k).sort((a, b) => pr[b] - pr[a]);
+  for (const k of order) { const r = rad(l, pr[k]), ratio = l.base[k] > 5 ? pr[k] / l.base[k] : (pr[k] > 5 ? 8 : 1); g.fillStyle = color(ratio); g.globalAlpha = 0.82; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), r, 0, 6.2832); g.fill(); g.globalAlpha = 1; if (k === st.hover) { g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.stroke(); } }
+  if (st.labels && st.lvl === 'dist') { g.font = '600 11px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#d9e4ee'; for (let k = 0; k < l.n; k++) g.fillText(l.name[k], sx(l.wx[k]), sy(l.wy[k]) - rad(l, pr[k]) - 5); }
+  if (st.labels && st.lvl === 'mah' && view.s / fit > 4) { g.font = '10px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#8499ac'; for (let k = 0; k < l.n; k++) { const x = sx(l.wx[k]), y = sy(l.wy[k]); if (x > 0 && y > 0 && x < W && y < H && pr[k] > 800) g.fillText(l.name[k], x, y - rad(l, pr[k]) - 3); } }
+  readout(l, pr);
+}
+let lastR = -1;
+function readout(l, pr) {
+  const sec = st.t, i = Math.min(NB, Math.round(sec / (BIN * 60)));
+  const mov = lerp(D.transit[Math.floor(Math.min(NB - 1e-6, sec / (BIN * 60)))], D.transit[Math.min(NB, Math.floor(sec / (BIN * 60)) + 1)], (sec / (BIN * 60)) % 1);
+  $('clock').textContent = fmt(sec); $('sMove').textContent = nf(mov);
+  const dep = lerp(D.departed[Math.floor(Math.min(NB - 1e-6, sec / (BIN * 60)))], D.departed[Math.min(NB, Math.floor(sec / (BIN * 60)) + 1)], (sec / (BIN * 60)) % 1); $('sDone').textContent = nf(dep - mov);
+  $('phase').textContent = sec < DEPEND ? 'departures: ' + fmt(Math.floor(sec / 900) * 900) + '–' + fmt(Math.floor(sec / 900) * 900 + 900) : 'last arrivals';
+  $('scrub').value = Math.floor(sec); const rn = Math.floor(sec / 20); if (rn !== lastR) { lastR = rn; ranks(l, pr); }
+}
+function ranks(l, pr) {
+  const ch = Array.from({ length: l.n }, (_, k) => [k, pr[k] - l.base[k]]).sort((a, b) => b[1] - a[1]);
+  const row = (a, c) => a.map(([k, v]) => `<span title="${l.name[k]}">${l.name[k]}</span><em class="${c}">${v > 0 ? '+' : '−'}${nf(Math.abs(v))}</em>`).join('');
+  $('gain').innerHTML = row(ch.slice(0, 5), 'g'); $('lose').innerHTML = row(ch.slice(-5).reverse(), 'l');
+  $('hGain').textContent = 'Growing most · ' + (st.lvl === 'dist' ? 'districts' : 'mahallas'); $('hLose').textContent = 'Shrinking most';
+}
+// timeline
+const cT = $('tl'), gT = cT.getContext('2d');
+function drawTL() {
+  const r = cT.getBoundingClientRect(), w = r.width, h = r.height, d = Math.min(devicePixelRatio || 1, 2); if (cT.width !== Math.round(w * d)) { cT.width = Math.round(w * d); cT.height = Math.round(h * d); }
+  gT.setTransform(d, 0, 0, d, 0, 0); gT.clearRect(0, 0, w, h); const v = D.transit, mx = Math.max(...v) * 1.1, Lm = 4, Rm = 4, T = 6, B = 16, X = i => Lm + (w - Lm - Rm) * i / NB, Y = a => T + (h - T - B) * (1 - a / mx);
+  gT.strokeStyle = '#1f2f40'; gT.beginPath(); gT.moveTo(Lm, h - B); gT.lineTo(w - Rm, h - B); gT.stroke();
+  gT.beginPath(); gT.moveTo(X(0), h - B); v.forEach((a, i) => gT.lineTo(X(i), Y(a))); gT.lineTo(X(NB), h - B); gT.closePath(); gT.fillStyle = 'rgba(242,182,76,0.16)'; gT.fill();
+  gT.beginPath(); v.forEach((a, i) => i ? gT.lineTo(X(i), Y(a)) : gT.moveTo(X(i), Y(a))); gT.strokeStyle = '#f2b64c'; gT.lineWidth = 1.6; gT.stroke();
+  const px = Lm + (w - Lm - Rm) * st.t / TMAX; gT.strokeStyle = '#d9e4ee'; gT.lineWidth = 1; gT.beginPath(); gT.moveTo(px, T); gT.lineTo(px, h - B); gT.stroke();
+  gT.fillStyle = '#8499ac'; gT.font = '10px "IBM Plex Mono", monospace'; ['06', '07', '08', '09', '10', '11'].forEach((t, i) => { gT.textAlign = i === 5 ? 'right' : i === 0 ? 'left' : 'center'; gT.fillText(t + ':00', Lm + (w - Lm - Rm) * i / 5, h - 3); });
+}
+$('tl').addEventListener('click', e => { const r = cT.getBoundingClientRect(); st.t = Math.max(0, Math.min(TMAX - 1, (e.clientX - r.left - 4) / (r.width - 8) * TMAX)); });
+let last = performance.now();
+function frame(now) { const dt = Math.min(0.1, (now - last) / 1000); last = now; if (st.playing) { st.t += dt * st.speed; if (st.t >= TMAX - 1) st.t = 0; } draw(now); drawTL(); requestAnimationFrame(frame); }
+// controls
+$('play').onclick = () => { st.playing = !st.playing; $('play').textContent = st.playing ? 'Pause' : 'Play'; };
+$('scrub').oninput = e => { st.t = +e.target.value; }; $('spd').onchange = e => { st.speed = +e.target.value; };
+const setLvl = k => { st.lvl = k; st.hover = -1; lastR = -1; $('bD').setAttribute('aria-pressed', k === 'dist'); $('bM').setAttribute('aria-pressed', k === 'mah'); $('tip').hidden = true; };
+$('bD').onclick = () => setLvl('dist'); $('bM').onclick = () => setLvl('mah');
+[['oArc', 'arcs'], ['oGhost', 'ghost'], ['oLab', 'labels']].forEach(([id, k]) => $(id).onchange = e => { st[k] = e.target.checked; });
+function zoomAt(f, x, y) { const wx = (x - W / 2) / view.s + view.cx, wy = (y - H / 2) / view.s + view.cy; view.s = Math.max(fit * 0.7, Math.min(fit * 40, view.s * f)); view.cx = wx - (x - W / 2) / view.s; view.cy = wy - (y - H / 2) / view.s; }
+$('zin').onclick = () => zoomAt(1.5, W / 2, H / 2); $('zout').onclick = () => zoomAt(1 / 1.5, W / 2, H / 2); $('zrs').onclick = () => { view.s = fit; view.cx = (bx0 + bx1) / 2; view.cy = (by0 + by1) / 2; };
+wrap.addEventListener('wheel', e => { e.preventDefault(); const r = wrap.getBoundingClientRect(); zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+const ptr = new Map(); let pd0 = 0;
+wrap.addEventListener('pointerdown', e => { if (e.target.closest('.ctl,.zoom,.seg,.opts')) return; wrap.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pd0 = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+wrap.addEventListener('pointermove', e => {
+  if (ptr.has(e.pointerId)) { const p = ptr.get(e.pointerId); if (ptr.size === 1) { view.cx -= (e.clientX - p[0]) / view.s; view.cy -= (e.clientY - p[1]) / view.s; } ptr.set(e.pointerId, [e.clientX, e.clientY]); if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = wrap.getBoundingClientRect(); if (pd0) zoomAt(d / pd0, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top); pd0 = d; } return; }
+  const r = wrap.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, l = L[st.lvl], pr = presentAt(l, st.t); let best = -1, bd = 1e9;
+  for (let k = 0; k < l.n; k++) { const d = Math.hypot(sx(l.wx[k]) - mx, sy(l.wy[k]) - my); if (d < Math.max(rad(l, pr[k]), 6) && d < bd) { bd = d; best = k; } }
+  st.hover = best; const tip = $('tip');
+  if (best < 0) tip.hidden = true; else { const dv = pr[best] - l.base[best]; tip.hidden = false; tip.innerHTML = `<b>${l.name[best]}</b>${st.lvl === 'mah' ? ' · ' + (NAMES[l.d[best]] || '') : ''}<br>now <span class="m">${nf(pr[best])}</span> · at 06:00 <span class="m">${nf(l.base[best])}</span><br>change <span class="m" style="color:${dv >= 0 ? 'var(--gain)' : 'var(--lose)'}">${dv >= 0 ? '+' : '−'}${nf(Math.abs(dv))}</span>`; tip.style.left = Math.min(mx + 14, W - 190) + 'px'; tip.style.top = Math.max(8, my - 10) + 'px'; }
+});
+['pointerup', 'pointercancel'].forEach(t => wrap.addEventListener(t, e => { ptr.delete(e.pointerId); pd0 = 0; }));
+wrap.addEventListener('pointerleave', () => { st.hover = -1; $('tip').hidden = true; });
+window.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); $('play').click(); } });
+$('scrub').max = TMAX - 1; new ResizeObserver(resize).observe(wrap);
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { st.playing = false; $('play').textContent = 'Play'; }
+resize(); requestAnimationFrame(t => { last = t; frame(t); });
+</script>
