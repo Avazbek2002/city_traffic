@@ -1,4 +1,10 @@
+<!doctype html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="A model of Tashkent's weekday morning rush: car flows on the road network and people moving between neighbourhoods, 06:00-11:00. Model output, not measured traffic.">
+<meta property="og:type" content="website"><meta property="og:title" content="Tashkent morning traffic simulation">
+<meta property="og:description" content="Car flows and where people go between neighbourhoods, 06:00-11:00. Model output, not measured traffic.">
+<meta property="og:image" content="https://tashkent-traffic.avazbek.xyz/og.png"><meta name="twitter:card" content="summary_large_image">
 <title>Tashkent Morning Dashboard</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -63,11 +69,12 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
   #wins { display: flex; flex-direction: column; gap: 10px; } .win { height: 68vh; min-height: 380px; } .div { display: none !important; }
   #wins .win.max { position: fixed; inset: 8px; height: auto; }
   .clock { font-size: 34px; }
+  .hl .note, .hl > span:first-child, #layout { display: none; }
 }
 </style>
 <div class="app">
   <header>
-    <h1>Tashkent Morning Dashboard</h1>
+    <div><h1>Tashkent Morning Dashboard</h1><div class="note" style="margin-top:4px">Model output, not measured traffic. 45% of commuters driving and a 40 s signal delay are assumptions; results are not yet calibrated.</div></div>
     <div class="hl"><span>Layout</span><select id="layout" aria-label="Window layout"><option value="main">Roads + two graphs</option><option value="row">Side by side</option><option value="stack">Stacked</option></select><span class="note">drag the bars between windows to resize · ⛶ maximizes one</span></div>
   </header>
   <div class="strip">
@@ -277,7 +284,7 @@ function drawTL() {
   line(G.transit.map((v, i) => [X(i * G.bin * 60), T + (h - T - B) * (1 - v / mv)]), '#3fd0b0'); line(D.stats.map((x, i) => [X(i * 900 + 450), T + (h - T - B) * (1 - x.veh_on_network / vv)]), '#f2b64c');
   const px = X(S.t); gT.strokeStyle = '#d9e4ee'; gT.lineWidth = 1; gT.beginPath(); gT.moveTo(px, T); gT.lineTo(px, h - B); gT.stroke();
   gT.font = '10px "IBM Plex Mono", monospace'; gT.fillStyle = '#8499ac'; ['06', '07', '08', '09', '10', '11'].forEach((t, i) => { gT.textAlign = i === 5 ? 'right' : i === 0 ? 'left' : 'center'; gT.fillText(t + ':00', Lm + (w - Lm - Rm) * i / 5, h - 2); });
-  gT.textAlign = 'left'; gT.fillStyle = '#f2b64c'; gT.fillText('— vehicles on the road', Lm + 6, 11); gT.fillStyle = '#3fd0b0'; gT.fillText('— people on the move', Lm + 6 + gT.measureText('— vehicles on the road').width + 16, 11);
+  const l1 = w < 520 ? '— vehicles' : '— vehicles on the road', l2 = w < 520 ? '— people moving' : '— people on the move'; gT.textAlign = 'left'; gT.fillStyle = '#f2b64c'; gT.fillText(l1, Lm + 6, 11); gT.fillStyle = '#3fd0b0'; gT.fillText(l2, Lm + 6 + gT.measureText(l1).width + 16, 11);
 }
 cT.addEventListener('click', e => { const r = cT.getBoundingClientRect(); S.t = Math.max(0, Math.min(TMAX - 1, (e.clientX - r.left - 4) / (r.width - 8) * TMAX)); });
 let last = performance.now();

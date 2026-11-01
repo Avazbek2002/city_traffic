@@ -99,3 +99,7 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 `video/make_video.py` renders a 33-second 1080x1350 film frame by frame (Playwright + ffmpeg): road flows, the mahalla graph and an end card. It needs the viewer data of the slice run and `od_graph.json`:
 
     python3 video/make_video.py data/work/viewer_data.json data/work/od_graph.json out.mp4
+
+## Website (Vercel)
+
+`site/` is a static, ready-to-deploy copy of the dashboard (`index.html`, `og.png`, `vercel.json`). In Vercel, import the repo and set the **Root Directory** to `site`, Framework Preset **Other**, no build command. To refresh it after a new model run, rebuild with `viewer/assemble_viewer.py viewer/dashboard_template.html data/work/viewer_data.json site/index.html data/work/trips.json data/work/od_graph.json` and push.
