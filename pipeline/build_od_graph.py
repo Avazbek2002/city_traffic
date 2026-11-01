@@ -23,6 +23,11 @@ def _shift(p, k): q = p[k:] + [0.0]*k; f = sum(p)/sum(q); return [v*f for v in q
 _wp = os.environ.get('WORK_PROFILE', 'base'); W0 = PROFILE['work']
 if _wp == 'early30': PROFILE['work'] = _shift(W0, 2)
 elif _wp == 'mix': PROFILE['work'] = [0.5*a + 0.5*b for a, b in zip(W0, _shift(W0, 4))]
+elif _wp in ('start9', 'stagger'):     # same rule as congestion_slices.py: leave 45..5 min before the start; shift workers (slices 0-7 of the base profile) are kept
+    def _kern(S): return [max(0.0, min(360+15*j+15, S-5) - max(360+15*j, S-45))/40.0 for j in range(16)]
+    _mass = sum(W0[8:]); _early = W0[:8] + [0.0]*8
+    _ws = [(540, 1.0)] if _wp == 'start9' else [(510, .25), (540, .25), (570, .25), (600, .25)]
+    PROFILE['work'] = [a + _mass*sum(w*_kern(S)[j] for S, w in _ws) for j, a in enumerate(_early)]
 # ---- graph exactly as in congestion_slices.py, so edge order matches the saved slice times
 e = pd.read_csv(EF); e = e[~e.highway.isin(['service', 'living_street'])].reset_index(drop=True)
 ids = pd.unique(np.r_[e.u.values, e.v.values]); ix = pd.Series(np.arange(len(ids)), index=ids)

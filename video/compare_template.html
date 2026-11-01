@@ -1,10 +1,10 @@
 <!doctype html><meta charset="utf-8"><title>Tashkent video stage</title>
 <style>html,body{margin:0;background:#0a1017}canvas{display:block}</style>
-<canvas id="c" width="1080" height="1350"></canvas>
+<canvas id="c" width="1080" height="1920"></canvas>
 <script>
-// Deterministic frame renderer: window.renderFrame(f) draws frame f (0-based, call in order) on a 1080x1350 canvas. Scenes: side-by-side road flows, summary, end card.
-const DA = __DATA_A__, DB = __DATA_B__;
-const W = 1080, H = 1350, FPS = 30, COSL = Math.cos(41.3 * Math.PI / 180), BG = '#0a1017', LINE = '#1f2f40', FG = '#d9e4ee', MUT = '#8499ac', DIM = '#4d6277', AMB = '#f2b64c', TEAL = '#3fd0b0', ORG = '#f0643c';
+// Deterministic frame renderer: window.renderFrame(f) draws frame f (0-based, call in order) on a 1080x1920 canvas. Scenes: roads side by side (stacked), mahalla graphs, summary, end card.
+const DA = __DATA_A__, DB = __DATA_B__, GA = __GRAPH_A__, GB = __GRAPH_B__;
+const W = 1080, H = 1920, FPS = 30, COSL = Math.cos(41.3 * Math.PI / 180), BG = '#0a1017', LINE = '#1f2f40', FG = '#d9e4ee', MUT = '#8499ac', DIM = '#4d6277', AMB = '#f2b64c', TEAL = '#3fd0b0', ORG = '#f0643c';
 const FD = '"Liberation Sans Narrow","DejaVu Sans Condensed",Arial,sans-serif', FB = '"Liberation Sans",Arial,sans-serif', FM = '"DejaVu Sans Mono",monospace';
 const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
 const cv = document.getElementById('c'), g = cv.getContext('2d');
@@ -50,47 +50,104 @@ function roadsDraw(R, rect, t, dt, K = 8) {
   }
   g.globalAlpha = 1; g.restore();
 }
-// ---------------------------------------------------------------- scenes: two cities, same people, different start times
-const RA = roadsSet(DA), RB = roadsSet(DB);
-const PLAY = [0.8, 16.3], SUM = [16.3, 21.5], END = [21.5, 25], TOTAL = END[1], TMAX = 14400;
+// ---------------------------------------------------------------- vivid road renderer (zoomed on the dense core, glow on congested roads)
+function coreBounds(R) { const xs = Array.from(R.WX).sort((a, b) => a - b), ys = Array.from(R.WY).sort((a, b) => a - b), q = (a, p) => a[Math.floor(p * (a.length - 1))]; return { x0: q(xs, 0.025), x1: q(xs, 0.975), y0: q(ys, 0.025), y1: q(ys, 0.975) }; }
+function roadsDraw2(R, rect, t, dt, K = 18) {
+  const { N, NS, OFF, WX, WY, CUM, TOT, NX, NY, CF, CR, FLOW, RATIO, CAP, T0 } = R; if (!R.core) R.core = coreBounds(R); const fr = fitRect(R.core, rect, 1.0), X = fr.X, Y = fr.Y;
+  const pc = clamp(t / 900 - 0.5, 0, NS - 1), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0;
+  for (let k = 0; k < N; k++) { CF[k] = FLOW[i0*N + k] * (1 - w) + FLOW[i1*N + k] * w; CR[k] = RATIO[i0*N + k] * (1 - w) + RATIO[i1*N + k] * w; }
+  g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
+  g.lineWidth = 1; g.strokeStyle = LINE; g.fillStyle = 'rgba(255,255,255,0.02)'; R.rings.forEach(p => { g.beginPath(); p.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath(); g.fill(); g.stroke(); });
+  const sc = rect.h / 520, off = 1.0 * sc, paths = [0, 1, 2, 3, 4, 5].map(() => new Path2D());
+  for (let k = 0; k < N; k++) { const f = CF[k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b], a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(X(WX[a]) + ox, Y(WY[a]) + oy); for (let j = a + 1; j < e; j++) p.lineTo(X(WX[j]) + ox, Y(WY[j]) + oy); }
+  g.lineCap = 'round'; g.lineJoin = 'round'; const RC2 = ['#4a86c5', '#3fd0c0', '#f2d44e', '#ff9a3c', '#ff4d55', '#182636'];
+  [5, 0, 1, 2, 3, 4].forEach(b => { g.strokeStyle = RC2[b]; g.lineWidth = (b === 5 ? 0.8 : 1.3 + b * 0.6) * sc; g.stroke(paths[b]); });
+  g.globalCompositeOperation = 'lighter'; [[2, 0.07, 3.4], [3, 0.16, 3.6], [4, 0.26, 4.2]].forEach(([b, al, m]) => { g.globalAlpha = al; g.strokeStyle = RC2[b]; g.lineWidth = (1.3 + b * 0.6) * sc * m; g.stroke(paths[b]); }); g.globalAlpha = 1;
+  const sz = 2.2 * sc; let last = -1; g.globalAlpha = 0.95;
+  for (let k = 0; k < N; k++) {
+    const f = CF[k]; if (f < 1) continue; const ts = Math.max(0.5, T0[k] / 10 * CR[k] / 20), m = f * ts / 3600 / K; if (m <= 0) continue; R.acc[k] = (R.acc[k] + dt * 14 / ts) % 1;
+    const n = Math.ceil(m), ratio = CR[k] / 20, cl = ratio < 1.25 ? 0 : ratio < 2 ? 1 : 2, a = OFF[k], e = OFF[k+1];
+    for (let i = 0; i < n; i++) { if (i + R.R1[k] >= m) continue; const u = ((i + R.R2[k]) / n + R.acc[k]) % 1, d = u * TOT[k]; let j = a + 1; while (j < e - 1 && CUM[j] < d) j++;
+      const l = CUM[j] - CUM[j-1] || 1e-9, q = (d - CUM[j-1]) / l, x = WX[j-1] + (WX[j] - WX[j-1]) * q, y = WY[j-1] + (WY[j] - WY[j-1]) * q; if (cl !== last) { g.fillStyle = DOTC[cl]; last = cl; } g.fillRect(X(x) + NX[k] * off - sz / 2, Y(y) + NY[k] * off - sz / 2, sz, sz); }
+  }
+  g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.restore();
+}
+// ---------------------------------------------------------------- zone graph
+function graphSet(G, key) {
+  const l = key === 'dist' ? { name: G.dist.id.map(d => NAMES[d] || d), x: G.dist.x, y: G.dist.y, base: G.dist.base, pres: G.dist.present, rmax: 34 } : { name: G.mah.name, x: G.mah.x, y: G.mah.y, base: G.mah.base, pres: G.mah.present, rmax: 15 };
+  l.n = l.x.length; l.wx = l.x.map(v => v * COSL); l.wy = l.y.map(v => -v); l.max = Math.max(...l.pres.flat(), ...l.base); l.key = key; l.rings = G.rings.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * COSL, -y]) })); l.b = bounds(l.rings.map(r => r.p));
+  l.dcen = {}; l.rings.forEach(r => { const o = l.dcen[r.d] || (l.dcen[r.d] = [0, 0, 0]); r.p.forEach(([x, y]) => { o[0] += x; o[1] += y; o[2]++; }); }); return l;
+}
+const COLG = ratio => { const v = clamp(Math.log2(Math.max(ratio, 0.01)) / 1.6, -1, 1); if (v < 0) { const k = -v; return `rgb(${Math.round(lerp(109, 240, k))},${Math.round(lerp(130, 100, k))},${Math.round(lerp(153, 60, k))})`; } return `rgb(${Math.round(lerp(109, 63, v))},${Math.round(lerp(130, 208, v))},${Math.round(lerp(153, 176, v))})`; };
+function graphDraw(l, G, rect, t, now, amp = 3) {
+  const fr = fitRect(l.b, rect, 0.96), X = fr.X, Y = fr.Y, sc = rect.w / 640; g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
+  g.lineWidth = 1; g.strokeStyle = LINE; g.fillStyle = 'rgba(255,255,255,0.014)'; l.rings.forEach(r => { g.beginPath(); r.p.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath(); g.fill(); g.stroke(); });
+  const p = Math.min(G.nb - 1e-6, t / (G.bin * 60)), i0 = Math.floor(p), w = p - i0, a = l.pres[i0], b = l.pres[i0 + 1], pr = new Float32Array(l.n); for (let k = 0; k < l.n; k++) pr[k] = lerp(a[k], b[k], w);
+  const rad = (v, k) => { let e = v; if (amp !== 1 && l.base[k] > 5) { const r = v / l.base[k]; e = l.base[k] * Math.max(0.03, 1 + (r - 1) * amp); } return Math.min(l.rmax * 1.7, Math.max(1.3, l.rmax * Math.sqrt(e / l.max))) * sc * 1.2; };
+  const s = Math.floor(t / 900); if (s < G.ns) { let fl = G.mah.links[s].slice(0, 160); const mx = Math.max(1, ...fl.map(f => f[2])); g.lineCap = 'round';
+    for (const [i, j, v] of fl) { const x0 = X(l.wx[i]), y0 = Y(l.wy[i]), x1 = X(l.wx[j]), y1 = Y(l.wy[j]), cx = (x0 + x1) / 2 - (y1 - y0) * 0.18, cy = (y0 + y1) / 2 + (x1 - x0) * 0.18;
+      g.strokeStyle = `rgba(242,182,76,${0.12 + 0.3 * v / mx})`; g.lineWidth = (0.5 + 2.4 * Math.sqrt(v / mx)) * sc; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(cx, cy, x1, y1); g.stroke();
+      const nd = Math.min(5, 1 + Math.floor(4 * v / mx)); g.fillStyle = '#ffd98a'; for (let q = 0; q < nd; q++) { const u = ((now / 1000) * 0.4 + q / nd + (i * 7 + j * 13) % 10 / 10) % 1, aa = (1 - u) * (1 - u), bb = 2 * u * (1 - u), cc = u * u; g.beginPath(); g.arc(aa * x0 + bb * cx + cc * x1, aa * y0 + bb * cy + cc * y1, 1.6 * sc, 0, 6.2832); g.fill(); } } }
+  g.setLineDash([3, 3]); g.strokeStyle = 'rgba(217,228,238,0.32)'; g.lineWidth = 1; for (let k = 0; k < l.n; k++) { if (l.base[k] <= 0) continue; g.beginPath(); g.arc(X(l.wx[k]), Y(l.wy[k]), rad(l.base[k], k), 0, 6.2832); g.stroke(); } g.setLineDash([]);
+  const order = Array.from({ length: l.n }, (_, k) => k).sort((x, y) => pr[y] - pr[x]); g.globalAlpha = 0.84;
+  for (const k of order) { const ratio = l.base[k] > 5 ? pr[k] / l.base[k] : (pr[k] > 5 ? 8 : 1); g.fillStyle = COLG(ratio); g.beginPath(); g.arc(X(l.wx[k]), Y(l.wy[k]), rad(pr[k], k), 0, 6.2832); g.fill(); } g.globalAlpha = 1; g.font = `700 ${13 * sc}px ${FB}`; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; for (const d in l.dcen) { const o = l.dcen[d], tx = (NAMES[d] || '').toUpperCase(); g.strokeStyle = 'rgba(10,16,23,0.85)'; g.strokeText(tx, X(o[0] / o[2]), Y(o[1] / o[2])); g.fillStyle = 'rgba(217,228,238,0.8)'; g.fillText(tx, X(o[0] / o[2]), Y(o[1] / o[2])); } g.restore();
+  const dep = lerp(G.departed[i0], G.departed[i0 + 1], w), mov = lerp(G.transit[i0], G.transit[i0 + 1], w); return { mov, arrived: dep - mov };
+}
+
+// ---------------------------------------------------------------- scenes
+const RA = roadsSet(DA), RB = roadsSet(DB), MA = graphSet(GA, 'mah'), MB = graphSet(GB, 'mah');
+for (const l of [MA, MB]) { const xs = [...l.wx].sort((a, b) => a - b), ys = [...l.wy].sort((a, b) => a - b), q = (a, p) => a[Math.floor(p * (a.length - 1))], px = (q(xs, 0.98) - q(xs, 0.02)) * 0.05, py = (q(ys, 0.98) - q(ys, 0.02)) * 0.05; l.b = { x0: q(xs, 0.02) - px, x1: q(xs, 0.98) + px, y0: q(ys, 0.02) - py, y1: q(ys, 0.98) + py }; }   // zoom on the populated core
+const P1 = [0.8, 13.8], P2 = [13.8, 27.8], SUM = [27.8, 33.3], END = [33.3, 36.8], TOTAL = END[1], TMAX = 14400, TG = 16200;
 const PEAKA = Math.max(...DA.stats.map(s => s.veh_on_network)), PEAKB = Math.max(...DB.stats.map(s => s.veh_on_network));
 const MINA = Math.min(...DA.stats.map(s => s.avg_speed_kmh)), MINB = Math.min(...DB.stats.map(s => s.avg_speed_kmh));
+const MOVA = Math.max(...GA.transit), MOVB = Math.max(...GB.transit);
 const peakSoFar = (R, t) => { let m = 0; for (let u = 0; u <= t; u += 300) m = Math.max(m, R.stat(u).veh); return Math.max(m, R.stat(t).veh); };
+const movAt = (G, t) => { const p = Math.min(G.nb - 1e-6, t / (G.bin * 60)), i = Math.floor(p), w = p - i; return lerp(G.transit[i], G.transit[i + 1], w); };
+const movPeak = (G, t) => { let m = 0; for (let u = 0; u <= t; u += 300) m = Math.max(m, movAt(G, u)); return Math.max(m, movAt(G, t)); };
 function legendRamp(x, y, cols, l, r) { const W_ = 230, w = W_ / cols.length; x -= W_ - 120; cols.forEach((c, i) => { g.fillStyle = c; g.fillRect(x + i * w, y, w, 8); }); text(l, x, y + 28, 18, MUT); text(r, x + W_, y + 28, 18, MUT, { a: 'right' }); }
 function footnote() { text('Model output — not measured traffic', 54, H - 16, 20, DIM); }
-function title(t) { text('Same city, different start times', 54, 84, 40, FG, { w: 'bold', f: FD }); text('Tashkent morning commute, simulated', 56, 124, 24, MUT); text(clock(t), W - 54, 124, 84, AMB, { w: 'bold', f: FD, a: 'right' }); }
-function panel(R, x, label, sub, col, t, dt, peakNow) {
-  text(label, x + 270, 232, 30, col, { w: 'bold', f: FD, a: 'center' }); text(sub, x + 270, 258, 19, MUT, { a: 'center' });
-  roadsDraw(R, { x, y: 272, w: 540, h: 700 }, t, dt, 9);
-  const st = R.stat(t); text(nf(st.veh), x + 270, 1036, 60, FG, { w: 'bold', f: FD, a: 'center' }); text('cars on the road now', x + 270, 1066, 21, MUT, { a: 'center' });
-  text(st.spd.toFixed(0) + ' km/h', x + 270, 1128, 44, col, { w: 'bold', f: FD, a: 'center' }); text('average speed', x + 270, 1156, 21, MUT, { a: 'center' });
-  text('peak so far ' + nf(peakNow), x + 270, 1196, 24, AMB, { a: 'center' });
+function title(t, sub) { text('Same city, different start times', 54, 84, 40, FG, { w: 'bold', f: FD }); text(sub, 56, 124, 24, MUT); text(clock(t), W - 54, 124, 84, AMB, { w: 'bold', f: FD, a: 'right' }); }
+const BY = [165, 965], MAPH = 630;
+function blockHead(y, label, sub, col) { text(label, 54, y + 36, 38, col, { w: 'bold', f: FD }); text(sub, 56, y + 64, 21, MUT); }
+function statCols(y, cols, col) { cols.forEach((c, i) => { const x = 180 + i * 360; text(c[0], x, y + 38, 54, i === 2 ? AMB : FG, { w: 'bold', f: FD, a: 'center' }); text(c[1], x, y + 66, 21, MUT, { a: 'center' }); }); }
+function roadsBlock(R, y, label, sub, col, t) {
+  blockHead(y, label, sub, col); roadsDraw2(R, { x: 0, y: y + 74, w: W, h: MAPH }, t, 1 / FPS);
+  const st = R.stat(t); statCols(y + 74 + MAPH + 6, [[nf(st.veh), 'cars on the road now'], [st.spd.toFixed(0) + ' km/h', 'average speed'], [nf(peakSoFar(R, t)), 'peak so far']]);
 }
-function playScene(sec) {
-  const t = clamp((sec - PLAY[0]) / (PLAY[1] - PLAY[0]), 0, 1) * TMAX; title(t);
-  panel(RA, 0, 'Everyone starts at 09:00', 'every office opens at the same time', ORG, t, 1 / FPS, peakSoFar(RA, t));
-  panel(RB, 540, 'Staggered starts', 'a quarter each at 08:30 · 09:00 · 09:30 · 10:00', TEAL, t, 1 / FPS, peakSoFar(RB, t));
-  g.fillStyle = LINE; g.fillRect(539, 232, 2, 1010);
-  const cap = t < 3600 ? 'Same people, same roads, same schools. Only office start times differ.' : t < 8400 ? 'School runs and early commuters begin to fill the roads.' : t < 11700 ? 'Red roads are over capacity. Watch the left side.' : 'The wave passes. The peak is what matters.';
-  wrap(cap, 54, 1266, W - 108, 27, FG, 34); legendRamp(W - 54 - 120, 1292, RC.slice(0, 5), 'empty', 'over capacity'); footnote();
+function graphBlock(l, G, y, label, sub, col, t, now) {
+  blockHead(y, label, sub, col); const r = graphDraw(l, G, { x: 0, y: y + 74, w: W, h: MAPH }, t, now);
+  statCols(y + 74 + MAPH + 6, [[nf(r.mov), 'people on the move'], [nf(r.arrived), 'arrived at work or school'], [nf(movPeak(G, t)), 'peak on the move']]);
+}
+const LA = ['Everyone starts at 09:00', 'every office opens at the same time', ORG], LB = ['Staggered starts', 'a quarter each at 08:30 · 09:00 · 09:30 · 10:00', TEAL];
+function roadsScene(sec) {
+  const t = clamp((sec - P1[0]) / (P1[1] - P1[0]), 0, 1) * TMAX; title(t, 'Tashkent roads, a weekday morning, simulated');
+  roadsBlock(RA, BY[0], ...LA, t); roadsBlock(RB, BY[1], ...LB, t); g.fillStyle = LINE; g.fillRect(54, BY[1] - 8, W - 108, 2);
+  const cap = t < 3600 ? 'Same people, same roads, same schools. Only office start times differ.' : t < 8400 ? 'School runs and early commuters begin to fill the roads.' : t < 11700 ? 'Red roads are over capacity. Watch the top map.' : 'The wave passes. The peak is what matters.';
+  wrap(cap, 54, 1812, W - 108, 27, FG, 34); legendRamp(W - 54 - 120, 1850, RC.slice(0, 5), 'empty', 'over capacity'); footnote();
+}
+function graphScene(sec, now) {
+  const s = sec - P2[0], t = clamp(s / 13.5, 0, 1) * TG; title(t, 'Neighbourhoods (mahallas) over the morning');
+  graphBlock(MA, GA, BY[0], ...LA, t, now); graphBlock(MB, GB, BY[1], ...LB, t, now); g.fillStyle = LINE; g.fillRect(54, BY[1] - 8, W - 108, 2);
+  wrap(s < 4.5 ? 'Each circle is a neighbourhood. It shrinks as people leave for work and school…' : s < 9 ? '…and grows where they arrive. Teal is filling up, orange is emptying (change exaggerated ×3).' : 'Top: everyone leaves at once. Bottom: the same people leave in waves.', 54, 1812, W - 108, 27, FG, 34);
+  legendRamp(W - 54 - 120, 1850, ['#f0643c', '#b9714f', '#6d8299', '#4fb39e', '#3fd0b0'], 'emptied', 'filled'); footnote();
 }
 function sumScene(sec) {
-  const a = clamp((sec - SUM[0]) / 0.6, 0, 1), b = clamp((sec - SUM[0] - 1.2) / 0.8, 0, 1), c = clamp((sec - SUM[0] - 2.6) / 0.8, 0, 1); g.globalAlpha = a;
-  text('Same city, same people.', W / 2, 330, 64, FG, { w: 'bold', f: FD, a: 'center' }); text('Different start times.', W / 2, 410, 64, AMB, { w: 'bold', f: FD, a: 'center' }); g.globalAlpha = 1;
+  const a = clamp((sec - SUM[0]) / 0.6, 0, 1), c1 = clamp((sec - SUM[0] - 1.0) / 0.7, 0, 1), c2 = clamp((sec - SUM[0] - 2.0) / 0.7, 0, 1), c3 = clamp((sec - SUM[0] - 3.0) / 0.7, 0, 1); /* closing lines */
+  g.globalAlpha = a; text('Same city, same people.', W / 2, 330, 68, FG, { w: 'bold', f: FD, a: 'center' }); text('Different start times.', W / 2, 415, 68, AMB, { w: 'bold', f: FD, a: 'center' }); g.globalAlpha = 1;
   const row = (y, lab, l, r, al) => { g.globalAlpha = al; text(lab, W / 2, y, 28, MUT, { a: 'center' }); text(l, W / 4 + 20, y + 100, 92, ORG, { w: 'bold', f: FD, a: 'center' }); text('→', W / 2, y + 90, 60, DIM, { a: 'center' }); text(r, 3 * W / 4 - 20, y + 100, 92, TEAL, { w: 'bold', f: FD, a: 'center' }); g.globalAlpha = 1; };
-  row(560, 'Peak cars on the road at once', nf(Math.round(PEAKA / 1000) * 1000), nf(Math.round(PEAKB / 1000) * 1000), b);
-  row(820, 'Slowest average speed', MINA.toFixed(0) + ' km/h', MINB.toFixed(0) + ' km/h', c);
-  g.globalAlpha = c; text('In this model, staggering cuts the peak by more than half.', W / 2, 1090, 30, FG, { a: 'center' }); text('The jam does not disappear: it moves earlier, into the school run.', W / 2, 1136, 26, MUT, { a: 'center' }); g.globalAlpha = 1; footnote();
+  row(620, 'Peak cars on the road at once', nf(Math.round(PEAKA / 1000) * 1000), nf(Math.round(PEAKB / 1000) * 1000), c1);
+  row(930, 'Slowest average speed', MINA.toFixed(0) + ' km/h', MINB.toFixed(0) + ' km/h', c2);
+  g.globalAlpha = c3; text('In this model, staggering cuts the car peak by more than half.', W / 2, 1300, 32, FG, { a: 'center' }); text('The jam does not disappear: it moves earlier, into the school run.', W / 2, 1350, 27, MUT, { a: 'center' }); g.globalAlpha = 1; footnote();
 }
 function endScene(sec) {
-  const a = clamp((sec - END[0]) / 0.6, 0, 1); g.globalAlpha = a; text('Modelled, not measured', W / 2, 520, 74, FG, { w: 'bold', f: FD, a: 'center' });
-  text('An open traffic model of Tashkent’s morning commute', W / 2, 590, 34, AMB, { a: 'center' });
-  ['About 350,000 car trips, 06:00–10:00 · shortest-path routing with congestion', 'Signal delay 40 s and 45% of commuters driving are assumptions', 'Not yet calibrated against measured speeds'].forEach((s, i) => text(s, W / 2, 680 + i * 44, 26, MUT, { a: 'center' })); g.globalAlpha = 1;
+  const a = clamp((sec - END[0]) / 0.6, 0, 1); g.globalAlpha = a; text('Modelled, not measured', W / 2, 800, 74, FG, { w: 'bold', f: FD, a: 'center' });
+  text('An open traffic model of Tashkent’s morning commute', W / 2, 870, 34, AMB, { a: 'center' });
+  ['About 350,000 car trips, 06:00–10:00 · shortest-path routing with congestion', 'Signal delay 40 s and 45% of commuters driving are assumptions', 'Not yet calibrated against measured speeds'].forEach((s, i) => text(s, W / 2, 960 + i * 44, 26, MUT, { a: 'center' })); g.globalAlpha = 1;
 }
 function renderFrame(f) {
-  const sec = f / FPS; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = BG; g.fillRect(0, 0, W, H);
-  if (sec < PLAY[1]) playScene(sec); else if (sec < SUM[1]) sumScene(sec); else endScene(sec);
-  for (const j of [SUM[0], END[0]]) { const d = Math.abs(sec - j); if (d < 0.35) { g.fillStyle = `rgba(10,16,23,${(1 - d / 0.35) * 0.9})`; g.fillRect(0, 0, W, H); } }
+  const sec = f / FPS, now = sec * 1000; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = BG; g.fillRect(0, 0, W, H);
+  if (sec < P1[1]) roadsScene(sec); else if (sec < P2[1]) graphScene(sec, now); else if (sec < SUM[1]) sumScene(sec); else endScene(sec);
+  for (const j of [P2[0], SUM[0], END[0]]) { const d = Math.abs(sec - j); if (d < 0.35) { g.fillStyle = `rgba(10,16,23,${(1 - d / 0.35) * 0.9})`; g.fillRect(0, 0, W, H); } }
   if (sec > TOTAL - 0.4) { g.fillStyle = `rgba(10,16,23,${(sec - (TOTAL - 0.4)) / 0.4})`; g.fillRect(0, 0, W, H); }
 }
 window.renderFrame = renderFrame; window.TOTALF = Math.round(TOTAL * FPS);
