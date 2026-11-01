@@ -82,13 +82,13 @@ function statRow(items, y) { items.forEach((it, i) => { const x = 54 + i * 500; 
 function legendRamp(x, y, cols, l, r) { const W_ = 230, w = W_ / cols.length; x -= W_ - 120; cols.forEach((c, i) => { g.fillStyle = c; g.fillRect(x + i * w, y, w, 8); }); text(l, x, y + 28, 18, MUT); text(r, x + W_, y + 28, 18, MUT, { a: 'right' }); }
 let lastDt = 1 / FPS;
 function scene1(sec) {
-  const t = clamp((sec - 1.0) / 13.5, 0, 1) * 13500;
+  const PK = 9900, ease = u => u * u * (3 - 2 * u), t = sec < 1.7 ? PK : sec < 2.7 ? PK * (1 - ease((sec - 1.7) / 1.0)) : clamp((sec - 2.7) / 12.3, 0, 1) * 13500;   // hook: start at the 08:45 peak, rewind to 06:00, then play forward
   header('Tashkent roads', 'A weekday morning, simulated', t); roadsDraw(R1, { x: 0, y: 170, w: W, h: 960 }, t, lastDt);
   const st = R1.stat(t); statRow([[nf(st.veh), 'vehicles on the road'], [st.spd.toFixed(1) + ' km/h', 'average speed']], 1190);
-  const cap = t < 3600 ? 'The city wakes up. Few cars, free-flowing roads.' : t < 8100 ? 'School runs and early commuters begin to fill the main roads.' : t < 11700 ? 'Around 08:45 the commuter wave peaks. Red roads are over capacity.' : 'By 09:30 the wave has passed.';
+  const cap = sec < 1.7 ? 'Around 08:45 the commuter wave peaks. Red roads are over capacity.' : sec < 2.7 ? 'Rewinding to 06:00\u2026' : t < 3600 ? 'The city wakes up. Few cars, free-flowing roads.' : t < 8100 ? 'School runs and early commuters begin to fill the main roads.' : t < 11700 ? 'Around 08:45 the commuter wave peaks. Red roads are over capacity.' : 'By 09:30 the wave has passed.';
   wrap(cap, 54, 1272, W - 108, 27, FG, 34); footnote();
   legendRamp(W - 54 - 120, 1098, RC.slice(0, 5), 'empty', 'over capacity');
-  if (sec < 3.2) { const a = sec < 2.4 ? 1 : 1 - (sec - 2.4) / 0.8; g.fillStyle = `rgba(10,16,23,${0.78 * a})`; g.fillRect(0, 0, W, H); text('Tashkent,', W / 2, 560, 120, FG, { w: 'bold', f: FD, a: 'center', al: a }); text('a weekday morning', W / 2, 680, 84, AMB, { w: 'bold', f: FD, a: 'center', al: a }); text('06:00 – 10:00 · a traffic simulation', W / 2, 750, 34, MUT, { a: 'center', al: a }); }
+  if (sec < 2.2) { const a = sec < 1.5 ? 1 : 1 - (sec - 1.5) / 0.7; g.fillStyle = `rgba(10,16,23,${0.62 * a})`; g.fillRect(0, 300, W, 330); text('Why is your morning', W / 2, 440, 92, FG, { w: 'bold', f: FD, a: 'center', al: a }); text('commute so slow?', W / 2, 545, 92, AMB, { w: 'bold', f: FD, a: 'center', al: a }); }
 }
 function scene2(sec, now) {
   const t = clamp((sec - S2[0]) / 14.5, 0, 1) * 16200;
