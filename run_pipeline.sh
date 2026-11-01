@@ -18,6 +18,7 @@ python3 pipeline/build_university_attraction.py "$OTM" "$W/mahalla_zones_places.
 python3 pipeline/build_student_od.py "$W/mahalla_zones.csv" "$W/mahalla_student_production.csv" "$W/mahalla_zones_places.csv" "$W/mahalla_university_students.csv" "$W/students"   # 6 school/college/university OD + pa_vectors.npz
 python3 pipeline/build_graph.py "$PBF" "$MAH" "$W/road_edges.csv.gz"                                    # 7 drivable road graph from the OSM extract
 python3 pipeline/build_travel_times.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W"               # 8 free-flow zone-to-zone times (Dijkstra)
+python3 pipeline/build_signals.py "$PBF" "$MAH" "$W/signals.csv"                                                        # 8b traffic-signal nodes from OSM (used when SIGNALS_FILE=$W/signals.csv)
 python3 pipeline/congestion_loop.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/loop" am0809    # 9 one-hour equilibrium (am0809 or am0708)
 python3 pipeline/congestion_slices.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/slices"        # 10 sixteen 15-minute slices (~15 min)
 python3 viewer/prep_viewer_data.py "$W/slices/slices_flow.npz" "$W/slices/slice_stats.csv" "$DIST" "$W/viewer_data.json"             # 11 pack for the viewer

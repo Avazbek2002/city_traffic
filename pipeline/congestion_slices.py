@@ -24,6 +24,11 @@ e = pd.read_csv(EF); e = e[~e.highway.isin(['service', 'living_street'])].reset_
 ids = pd.unique(np.r_[e.u.values, e.v.values]); ix = pd.Series(np.arange(len(ids)), index=ids)
 e['a'] = ix[e.u].values; e['b'] = ix[e.v].values
 e['t0'] = e.length_m / (e.speed_kmh / 3.6)                                  # s
+SG = os.environ.get('SIGNALS_FILE')       # csv from build_signals.py. Adds a fixed delay (s) to every edge that ENTERS a signalised node. Off unless the file is given.
+if SG:
+    sg = pd.read_csv(SG); dj, dc = E('SIGNAL_DELAY', 20), E('CROSSING_DELAY', 5)      # ASSUMPTION: average control delay at a signalised junction / a signalised crossing
+    isj = e.v.isin(set(sg.node[sg.type == 'junction'])); isc = e.v.isin(set(sg.node[sg.type == 'crossing'])) & ~isj
+    e['t0'] = e.t0 + np.where(isj, dj, np.where(isc, dc, 0.0)); print(f'signal delay: {int(isj.sum())} junction edges +{dj:.0f}s, {int(isc.sum())} crossing edges +{dc:.0f}s')
 LF = os.environ.get('LANES_FILE')          # xlsx from build_lane_checklist.py: column 'Typical lanes per direction (main part)' by street name
 if LF:
     ov = pd.read_excel(LF, sheet_name='Streets'); ov = ov[ov['Typical lanes per direction (main part)'].notna()]

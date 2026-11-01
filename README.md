@@ -89,3 +89,7 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 `viewer/dashboard_template.html` puts the car-flow simulation, the district graph and the mahalla graph on one page with a shared clock (06:00-11:00; the road model itself ends at 10:00, the graphs show arrivals until 11:00). Drag the bars between windows to resize them, use the maximize button on any window, or pick another layout (roads + two graphs, side by side, stacked). Clicking a district or mahalla circle filters the car trips to that district. Build it with:
 
     python3 viewer/assemble_viewer.py viewer/dashboard_template.html data/work/viewer_data.json viewer/dashboard.html data/work/trips.json data/work/od_graph.json
+
+## Traffic-signal delay (optional, off by default)
+
+`pipeline/build_signals.py` extracts the signalised junctions and signalised pedestrian crossings from the OSM extract (about 1,900 junction nodes and 2,000 crossings in the study area). Run the slices with `SIGNALS_FILE=data/work/signals.csv` to add a fixed delay to every road section that enters such a node: `SIGNAL_DELAY` seconds at a junction (default 20) and `CROSSING_DELAY` at a crossing (default 5). Both are ASSUMPTIONS. Without the file the model has no intersection delay and an empty network averages about 58 km/h; with 40 s / 10 s it averages about 38 km/h and the busiest slice about 32 km/h. The delay is a fixed cost, so it does not tell you how much of a real slowdown comes from queues; calibrate it against measured off-peak and peak speeds.
