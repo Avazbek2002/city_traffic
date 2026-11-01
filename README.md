@@ -93,3 +93,9 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 ## Traffic-signal delay (optional, off by default)
 
 `pipeline/build_signals.py` extracts the signalised junctions and signalised pedestrian crossings from the OSM extract (about 1,900 junction nodes and 2,000 crossings in the study area). Run the slices with `SIGNALS_FILE=data/work/signals.csv` to add a fixed delay to every road section that enters such a node: `SIGNAL_DELAY` seconds at a junction (default 20) and `CROSSING_DELAY` at a crossing (default 5). Both are ASSUMPTIONS. Without the file the model has no intersection delay and an empty network averages about 58 km/h; with 40 s / 10 s it averages about 38 km/h and the busiest slice about 32 km/h. The delay is a fixed cost, so it does not tell you how much of a real slowdown comes from queues; calibrate it against measured off-peak and peak speeds.
+
+## Video (LinkedIn cut)
+
+`video/make_video.py` renders a 43-second 1080x1350 film frame by frame (Playwright + ffmpeg): road flows, the mahalla graph, a what-if comparison and an end card. It needs the viewer data of two slice runs (base and `WORK_PROFILE=mix`) plus `od_graph.json`:
+
+    python3 video/make_video.py data/work/viewer_data.json data/work/viewer_data_mix.json data/work/od_graph.json out.mp4

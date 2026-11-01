@@ -1,0 +1,137 @@
+<!doctype html><meta charset="utf-8"><title>Tashkent video stage</title>
+<style>html,body{margin:0;background:#0a1017}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+// Deterministic frame renderer: window.renderFrame(f) draws frame f (0-based, call in order) on a 1080x1350 canvas. Scenes: 1 road flows, 2 mahalla graph, 3 what-if, 4 end card.
+const D1 = __DATA__, D2 = __DATA2__, GR = __GRAPH__;
+const W = 1080, H = 1350, FPS = 30, COSL = Math.cos(41.3 * Math.PI / 180), BG = '#0a1017', LINE = '#1f2f40', FG = '#d9e4ee', MUT = '#8499ac', DIM = '#4d6277', AMB = '#f2b64c', TEAL = '#3fd0b0', ORG = '#f0643c';
+const FD = '"Liberation Sans Narrow","DejaVu Sans Condensed",Arial,sans-serif', FB = '"Liberation Sans",Arial,sans-serif', FM = '"DejaVu Sans Mono",monospace';
+const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
+const lerp = (a, b, w) => a + (b - a) * w, clamp = (v, a, b) => Math.max(a, Math.min(b, v)), nf = n => Math.round(n).toLocaleString('en-US'), pad = n => String(n).padStart(2, '0');
+const clock = t => { const m = Math.floor(t / 60) + 360; return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); };
+const rngSeed = s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+function fitRect(b, r, pad = 0.94) { const s = Math.min(r.w / (b.x1 - b.x0), r.h / (b.y1 - b.y0)) * pad, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2; return { s, X: x => r.x + r.w / 2 + (x - cx) * s, Y: y => r.y + r.h / 2 + (y - cy) * s }; }
+function text(s, x, y, size, col, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; g.fillStyle = col; g.textAlign = o.a || 'left'; g.globalAlpha = o.al === undefined ? 1 : o.al; g.fillText(s, x, y); g.globalAlpha = 1; }
+function tw(s, size, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; return g.measureText(s).width; }
+function wrap(s, x, y, maxW, size, col, lh, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; const words = s.split(' '); let line = '', yy = y; for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { text(line, x, yy, size, col, o); line = w; yy += lh; } else line = t; } text(line, x, yy, size, col, o); return yy; }
+const bounds = rings => { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; rings.forEach(p => p.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })); return { x0, x1, y0, y1 }; };
+
+// ---------------------------------------------------------------- road flows
+function roadsSet(D) {
+  const R = { D, Q: D.q, N: D.nch, NS: D.ns }, Q = R.Q, N = R.N;
+  R.PTS = b64(D.pts, Uint16Array); R.OFF = b64(D.off, Uint32Array); R.FLOW = b64(D.flow, Uint16Array); R.RATIO = b64(D.ratio, Uint8Array); R.CAP = b64(D.cap, Uint16Array); R.T0 = b64(D.t0, Uint16Array);
+  const NP = R.PTS.length / 2; R.WX = new Float32Array(NP); R.WY = new Float32Array(NP); R.CUM = new Float32Array(NP); R.TOT = new Float32Array(N); R.NX = new Float32Array(N); R.NY = new Float32Array(N);
+  for (let j = 0; j < NP; j++) { R.WX[j] = R.PTS[2*j] * Q * COSL; R.WY[j] = -R.PTS[2*j+1] * Q; }
+  for (let k = 0; k < N; k++) { const a = R.OFF[k], b = R.OFF[k+1]; let c = 0; R.CUM[a] = 0; for (let j = a + 1; j < b; j++) { c += Math.hypot(R.WX[j]-R.WX[j-1], R.WY[j]-R.WY[j-1]); R.CUM[j] = c; } R.TOT[k] = c || 1e-9; const dx = R.WX[b-1]-R.WX[a], dy = R.WY[b-1]-R.WY[a], l = Math.hypot(dx, dy) || 1; R.NX[k] = -dy / l; R.NY[k] = dx / l; }
+  const r = rngSeed(12345); R.R1 = new Float32Array(N); R.R2 = new Float32Array(N); for (let k = 0; k < N; k++) { R.R1[k] = r(); R.R2[k] = r(); }
+  R.acc = new Float32Array(N); R.CF = new Float32Array(N); R.CR = new Float32Array(N);
+  R.rings = D.rings.map(r => r.p.map(([x, y]) => [x * Q * COSL, -y * Q])); R.b = bounds(R.rings);
+  R.stat = t => { const pc = clamp(t / 900 - 0.5, 0, R.NS - 1), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, R.NS - 1), w = pc - i0, a = D.stats[i0], b = D.stats[i1]; return { veh: lerp(a.veh_on_network, b.veh_on_network, w), spd: lerp(a.avg_speed_kmh, b.avg_speed_kmh, w) }; };
+  return R;
+}
+const RC = ['#3a6a9e', '#3fb0a6', '#e6c84a', '#f08a3c', '#e5484d', '#182636'], DOTC = ['#a9c9e6', '#f4c552', '#ff6a5c'];
+function roadsDraw(R, rect, t, dt, K = 8) {
+  const { N, NS, OFF, WX, WY, CUM, TOT, NX, NY, CF, CR, FLOW, RATIO, CAP, T0 } = R, fr = fitRect(R.b, rect), X = fr.X, Y = fr.Y;
+  const pc = clamp(t / 900 - 0.5, 0, NS - 1), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0;
+  for (let k = 0; k < N; k++) { CF[k] = FLOW[i0*N + k] * (1 - w) + FLOW[i1*N + k] * w; CR[k] = RATIO[i0*N + k] * (1 - w) + RATIO[i1*N + k] * w; }
+  g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
+  g.lineWidth = 1; g.strokeStyle = LINE; g.fillStyle = 'rgba(255,255,255,0.014)'; R.rings.forEach(p => { g.beginPath(); p.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath(); g.fill(); g.stroke(); });
+  const sc = rect.w / 800, off = 1.0 * sc, paths = [0, 1, 2, 3, 4, 5].map(() => new Path2D());
+  for (let k = 0; k < N; k++) { const f = CF[k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b], a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(X(WX[a]) + ox, Y(WY[a]) + oy); for (let j = a + 1; j < e; j++) p.lineTo(X(WX[j]) + ox, Y(WY[j]) + oy); }
+  g.lineCap = 'round'; g.lineJoin = 'round'; [5, 0, 1, 2, 3, 4].forEach(b => { g.strokeStyle = RC[b]; g.lineWidth = (b === 5 ? 0.7 : 1.0 + b * 0.45) * sc; g.stroke(paths[b]); });
+  const sz = 2.1 * sc; let last = -1; g.globalAlpha = 0.9;
+  for (let k = 0; k < N; k++) {
+    const f = CF[k]; if (f < 1) continue; const ts = Math.max(0.5, T0[k] / 10 * CR[k] / 20), m = f * ts / 3600 / K; if (m <= 0) continue; R.acc[k] = (R.acc[k] + dt * 14 / ts) % 1;
+    const n = Math.ceil(m), ratio = CR[k] / 20, cl = ratio < 1.25 ? 0 : ratio < 2 ? 1 : 2, a = OFF[k], e = OFF[k+1];
+    for (let i = 0; i < n; i++) { if (i + R.R1[k] >= m) continue; const u = ((i + R.R2[k]) / n + R.acc[k]) % 1, d = u * TOT[k]; let j = a + 1; while (j < e - 1 && CUM[j] < d) j++;
+      const l = CUM[j] - CUM[j-1] || 1e-9, q = (d - CUM[j-1]) / l, x = WX[j-1] + (WX[j] - WX[j-1]) * q, y = WY[j-1] + (WY[j] - WY[j-1]) * q; if (cl !== last) { g.fillStyle = DOTC[cl]; last = cl; } g.fillRect(X(x) + NX[k] * off - sz / 2, Y(y) + NY[k] * off - sz / 2, sz, sz); }
+  }
+  g.globalAlpha = 1; g.restore();
+}
+
+// ---------------------------------------------------------------- zone graph
+function graphSet(G, key) {
+  const l = key === 'dist' ? { name: G.dist.id.map(d => NAMES[d] || d), x: G.dist.x, y: G.dist.y, base: G.dist.base, pres: G.dist.present, rmax: 34 } : { name: G.mah.name, x: G.mah.x, y: G.mah.y, base: G.mah.base, pres: G.mah.present, rmax: 15 };
+  l.n = l.x.length; l.wx = l.x.map(v => v * COSL); l.wy = l.y.map(v => -v); l.max = Math.max(...l.pres.flat(), ...l.base); l.key = key; l.rings = G.rings.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * COSL, -y]) })); l.b = bounds(l.rings.map(r => r.p));
+  l.dcen = {}; l.rings.forEach(r => { const o = l.dcen[r.d] || (l.dcen[r.d] = [0, 0, 0]); r.p.forEach(([x, y]) => { o[0] += x; o[1] += y; o[2]++; }); }); return l;
+}
+const COLG = ratio => { const v = clamp(Math.log2(Math.max(ratio, 0.01)) / 1.6, -1, 1); if (v < 0) { const k = -v; return `rgb(${Math.round(lerp(109, 240, k))},${Math.round(lerp(130, 100, k))},${Math.round(lerp(153, 60, k))})`; } return `rgb(${Math.round(lerp(109, 63, v))},${Math.round(lerp(130, 208, v))},${Math.round(lerp(153, 176, v))})`; };
+function graphDraw(l, G, rect, t, now, amp = 3) {
+  const fr = fitRect(l.b, rect, 0.96), X = fr.X, Y = fr.Y, sc = rect.w / 640; g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
+  g.lineWidth = 1; g.strokeStyle = LINE; g.fillStyle = 'rgba(255,255,255,0.014)'; l.rings.forEach(r => { g.beginPath(); r.p.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath(); g.fill(); g.stroke(); });
+  const p = Math.min(G.nb - 1e-6, t / (G.bin * 60)), i0 = Math.floor(p), w = p - i0, a = l.pres[i0], b = l.pres[i0 + 1], pr = new Float32Array(l.n); for (let k = 0; k < l.n; k++) pr[k] = lerp(a[k], b[k], w);
+  const rad = (v, k) => { let e = v; if (amp !== 1 && l.base[k] > 5) { const r = v / l.base[k]; e = l.base[k] * Math.max(0.03, 1 + (r - 1) * amp); } return Math.min(l.rmax * 1.7, Math.max(1.3, l.rmax * Math.sqrt(e / l.max))) * sc * 1.2; };
+  const s = Math.floor(t / 900); if (s < G.ns) { let fl = G.mah.links[s].slice(0, 160); const mx = Math.max(1, ...fl.map(f => f[2])); g.lineCap = 'round';
+    for (const [i, j, v] of fl) { const x0 = X(l.wx[i]), y0 = Y(l.wy[i]), x1 = X(l.wx[j]), y1 = Y(l.wy[j]), cx = (x0 + x1) / 2 - (y1 - y0) * 0.18, cy = (y0 + y1) / 2 + (x1 - x0) * 0.18;
+      g.strokeStyle = `rgba(242,182,76,${0.12 + 0.3 * v / mx})`; g.lineWidth = (0.5 + 2.4 * Math.sqrt(v / mx)) * sc; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(cx, cy, x1, y1); g.stroke();
+      const nd = Math.min(5, 1 + Math.floor(4 * v / mx)); g.fillStyle = '#ffd98a'; for (let q = 0; q < nd; q++) { const u = ((now / 1000) * 0.4 + q / nd + (i * 7 + j * 13) % 10 / 10) % 1, aa = (1 - u) * (1 - u), bb = 2 * u * (1 - u), cc = u * u; g.beginPath(); g.arc(aa * x0 + bb * cx + cc * x1, aa * y0 + bb * cy + cc * y1, 1.6 * sc, 0, 6.2832); g.fill(); } } }
+  g.setLineDash([3, 3]); g.strokeStyle = 'rgba(217,228,238,0.32)'; g.lineWidth = 1; for (let k = 0; k < l.n; k++) { if (l.base[k] <= 0) continue; g.beginPath(); g.arc(X(l.wx[k]), Y(l.wy[k]), rad(l.base[k], k), 0, 6.2832); g.stroke(); } g.setLineDash([]);
+  const order = Array.from({ length: l.n }, (_, k) => k).sort((x, y) => pr[y] - pr[x]); g.globalAlpha = 0.84;
+  for (const k of order) { const ratio = l.base[k] > 5 ? pr[k] / l.base[k] : (pr[k] > 5 ? 8 : 1); g.fillStyle = COLG(ratio); g.beginPath(); g.arc(X(l.wx[k]), Y(l.wy[k]), rad(pr[k], k), 0, 6.2832); g.fill(); } g.globalAlpha = 1; g.font = `700 ${13 * sc}px ${FB}`; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = 4; for (const d in l.dcen) { const o = l.dcen[d], tx = (NAMES[d] || '').toUpperCase(); g.strokeStyle = 'rgba(10,16,23,0.85)'; g.strokeText(tx, X(o[0] / o[2]), Y(o[1] / o[2])); g.fillStyle = 'rgba(217,228,238,0.8)'; g.fillText(tx, X(o[0] / o[2]), Y(o[1] / o[2])); } g.restore();
+  const dep = lerp(G.departed[i0], G.departed[i0 + 1], w), mov = lerp(G.transit[i0], G.transit[i0 + 1], w); return { mov, arrived: dep - mov };
+}
+
+// ---------------------------------------------------------------- scenes
+const R1 = roadsSet(D1), R2 = roadsSet(D2), GM = graphSet(GR, 'mah');
+const S1 = [0, 15], S2 = [15, 30], S3 = [30, 40], S4 = [40, 43.5], TOTAL = S4[1];
+const pk = R => Math.max(...R.D.stats.map(x => x.veh_on_network)), pkClock = R => { const s = R.D.stats; return s[s.map(x => x.veh_on_network).indexOf(pk(R))].clock; };
+const minSpd = R => Math.min(...R.D.stats.map(x => x.avg_speed_kmh));
+function header(title, sub, t) { text(title, 54, 92, 58, FG, { w: 'bold', f: FD }); text(sub, 56, 132, 24, MUT); text(clock(t), W - 54, 112, 108, FG, { w: 'bold', f: FD, a: 'right' }); }
+function footnote() { text('Model output — not measured traffic', 54, H - 16, 20, DIM); }
+function statRow(items, y) { items.forEach((it, i) => { const x = 54 + i * 500; text(it[0], x, y, 56, AMB, { w: 'bold', f: FD }); text(it[1], x, y + 32, 22, MUT); }); }
+function legendRamp(x, y, cols, l, r) { const W_ = 230, w = W_ / cols.length; x -= W_ - 120; cols.forEach((c, i) => { g.fillStyle = c; g.fillRect(x + i * w, y, w, 8); }); text(l, x, y + 28, 18, MUT); text(r, x + W_, y + 28, 18, MUT, { a: 'right' }); }
+let lastDt = 1 / FPS;
+function scene1(sec) {
+  const t = clamp((sec - 1.0) / 13.5, 0, 1) * 13500;
+  header('Tashkent roads', 'A weekday morning, simulated', t); roadsDraw(R1, { x: 0, y: 170, w: W, h: 960 }, t, lastDt);
+  const st = R1.stat(t); statRow([[nf(st.veh), 'vehicles on the road'], [st.spd.toFixed(1) + ' km/h', 'average speed']], 1190);
+  const cap = t < 3600 ? 'The city wakes up. Few cars, free-flowing roads.' : t < 8100 ? 'School runs and early commuters begin to fill the main roads.' : t < 11700 ? 'Around 08:45 the commuter wave peaks. Red roads are over capacity.' : 'By 09:30 the wave has passed.';
+  wrap(cap, 54, 1272, W - 108, 27, FG, 34); footnote();
+  legendRamp(W - 54 - 120, 1098, RC.slice(0, 5), 'empty', 'over capacity');
+  if (sec < 3.2) { const a = sec < 2.4 ? 1 : 1 - (sec - 2.4) / 0.8; g.fillStyle = `rgba(10,16,23,${0.78 * a})`; g.fillRect(0, 0, W, H); text('Tashkent,', W / 2, 560, 120, FG, { w: 'bold', f: FD, a: 'center', al: a }); text('a weekday morning', W / 2, 680, 84, AMB, { w: 'bold', f: FD, a: 'center', al: a }); text('06:00 – 10:00 · a traffic simulation', W / 2, 750, 34, MUT, { a: 'center', al: a }); }
+}
+function scene2(sec, now) {
+  const t = clamp((sec - S2[0]) / 14.5, 0, 1) * 16200;
+  header('Where people go', 'Neighbourhoods (mahallas) over the morning', t); const r = graphDraw(GM, GR, { x: 0, y: 170, w: W, h: 960 }, t, now);
+  statRow([[nf(r.mov), 'people on the move'], [nf(r.arrived), 'arrived at work or school']], 1190);
+  wrap(sec - S2[0] < 7 ? 'Each circle is a neighbourhood. It shrinks as people leave home for work and school…' : '…and grows where they arrive. Teal is filling up, orange is emptying (change exaggerated ×3).', 54, 1272, W - 108, 27, FG, 34); footnote();
+  legendRamp(W - 54 - 120, 1098, ['#f0643c', '#b9714f', '#6d8299', '#4fb39e', '#3fd0b0'], 'emptied', 'filled');
+}
+function sceneWhatIf(sec) {
+  const t = 3600 + clamp((sec - S3[0]) / 9, 0, 1) * 9000, pb = pk(R1), pm = pk(R2), delta = Math.round((pm / pb - 1) * 100);
+  text('What if half of the commuters', 54, 84, 52, FG, { w: 'bold', f: FD }); text('start work at 08:00 instead of 09:00?', 54, 138, 46, AMB, { w: 'bold', f: FD });
+  const rA = { x: 0, y: 190, w: 540, h: 560 }, rB = { x: 540, y: 190, w: 540, h: 560 }; roadsDraw(R1, rA, t, lastDt, 11); roadsDraw(R2, rB, t, lastDt, 11);
+  g.fillStyle = LINE; g.fillRect(539, 190, 2, 560);
+  text('Today (model)', 24, 226, 26, FG, { w: 'bold' }); text('Staggered starts', 564, 226, 26, FG, { w: 'bold' });
+  const a = R1.stat(t), b = R2.stat(t), o42 = { w: 'bold', f: FD }; text(nf(a.veh), 24, 738, 44, AMB, o42); text('on the road now', 24 + tw(nf(a.veh), 44, o42) + 12, 736, 20, MUT); text(nf(b.veh), 564, 738, 44, TEAL, o42); text('on the road now', 564 + tw(nf(b.veh), 44, o42) + 12, 736, 20, MUT); text(clock(t), W - 54, 800 - 14, 40, FG, { w: 'bold', f: FD, a: 'right' });
+  // comparison chart
+  const cx0 = 70, cx1 = W - 40, cy0 = 800, cy1 = 1090, mx = Math.max(pb, pm) * 1.12, X = tt => cx0 + (cx1 - cx0) * tt / 14400, Yv = v => cy1 - (cy1 - cy0) * v / mx;
+  g.strokeStyle = LINE; g.lineWidth = 1; g.beginPath(); g.moveTo(cx0, cy1); g.lineTo(cx1, cy1); g.stroke(); ['06', '07', '08', '09', '10'].forEach((h, i) => text(h + ':00', X(i * 3600), cy1 + 26, 20, MUT, { a: i === 0 ? 'left' : i === 4 ? 'right' : 'center' }));
+  const curve = (R, col) => { g.beginPath(); R.D.stats.forEach((s, i) => { const x = X(i * 900 + 450), y = Yv(s.veh_on_network); i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.strokeStyle = col; g.lineWidth = 3.5; g.stroke(); };
+  curve(R1, AMB); curve(R2, TEAL); g.setLineDash([4, 4]); g.strokeStyle = 'rgba(217,228,238,0.5)'; g.lineWidth = 2; g.beginPath(); g.moveTo(X(t), cy0 - 6); g.lineTo(X(t), cy1); g.stroke(); g.setLineDash([]);
+  const pa = R1.D.stats.map(s => s.veh_on_network).indexOf(pb), pbi = R2.D.stats.map(s => s.veh_on_network).indexOf(pm);
+  [[pa, pb, AMB, -14], [pbi, pm, TEAL, -14]].forEach(([i, v, c, dy]) => { g.fillStyle = c; g.beginPath(); g.arc(X(i * 900 + 450), Yv(v), 7, 0, 6.2832); g.fill(); text(nf(v), X(i * 900 + 450) + (c === AMB ? 14 : -14), Yv(v) + dy + 4, 26, c, { w: 'bold', a: c === AMB ? 'left' : 'right' }); });
+  text('vehicles on the road', 70, cy0 - 14, 20, MUT);
+  const reveal = clamp((sec - 36) / 1.2, 0, 1), c1 = pkClock(R1), c2 = pkClock(R2);
+  const msg = Math.abs(delta) < 8 ? `In the model, staggering mostly moves the peak (${c1} \u2192 ${c2}) and cuts it by only ${Math.abs(delta)}%: school runs already fill the earlier hour.`
+    : `Same city, same roads, only start times differ. Peak load ${delta < 0 ? 'falls' : 'rises'} by ${Math.abs(delta)}% (${nf(pb)} \u2192 ${nf(pm)} vehicles), peaking at ${c2} instead of ${c1}.`;
+  wrap(msg, 54, 1178, W - 108, 28, FG, 36, { al: reveal });
+  text('An illustration from an uncalibrated model, not a forecast.', 54, 1296, 23, MUT); footnote();
+}
+function scene4(sec) {
+  const a = clamp((sec - S4[0]) / 0.6, 0, 1); g.globalAlpha = a; text('Modelled, not measured', W / 2, 520, 74, FG, { w: 'bold', f: FD, a: 'center' });
+  text('An open traffic model of Tashkent’s morning peak', W / 2, 590, 36, AMB, { a: 'center' });
+  ['Roads from OpenStreetMap · demand from census, 2GIS and student data', 'Shortest-path routing with congestion · signal delay 40 s (assumed)', '45% of commuters drive (assumed) · results not yet calibrated'].forEach((s, i) => text(s, W / 2, 680 + i * 44, 26, MUT, { a: 'center' }));
+  text('Code and method: github.com/Avazbek2002/city_traffic', W / 2, 920, 30, FG, { a: 'center' }); g.globalAlpha = 1;
+}
+function renderFrame(f) {
+  const sec = f / FPS, now = sec * 1000; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = BG; g.fillRect(0, 0, W, H); lastDt = 1 / FPS;
+  if (sec < S1[1]) scene1(sec); else if (sec < S2[1]) scene2(sec, now); else if (sec < S3[1]) sceneWhatIf(sec); else scene4(sec);
+  // cross-fades at scene joins
+  for (const j of [S2[0], S3[0], S4[0]]) { const d = Math.abs(sec - j); if (d < 0.35) { g.fillStyle = `rgba(10,16,23,${(1 - d / 0.35) * 0.9})`; g.fillRect(0, 0, W, H); } }
+  if (sec > TOTAL - 0.4) { g.fillStyle = `rgba(10,16,23,${(sec - (TOTAL - 0.4)) / 0.4})`; g.fillRect(0, 0, W, H); }
+}
+window.renderFrame = renderFrame; window.TOTALF = Math.round(TOTAL * FPS);
+</script>
