@@ -96,6 +96,6 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 
 ## Video (LinkedIn cut)
 
-`video/make_video.py` renders a 43-second 1080x1350 film frame by frame (Playwright + ffmpeg): road flows, the mahalla graph, a what-if comparison and an end card. It needs the viewer data of two slice runs (base and `WORK_PROFILE=mix`) plus `od_graph.json`:
+`video/make_video.py` renders a 33-second 1080x1350 film frame by frame (Playwright + ffmpeg): road flows, the mahalla graph and an end card. It needs the viewer data of the slice run and `od_graph.json`:
 
-    python3 video/make_video.py data/work/viewer_data.json data/work/viewer_data_mix.json data/work/od_graph.json out.mp4
+    python3 video/make_video.py data/work/viewer_data.json data/work/od_graph.json out.mp4
