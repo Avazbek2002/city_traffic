@@ -100,8 +100,7 @@ function scene2(sec, now) {
 function scene4(sec) {
   const a = clamp((sec - S4[0]) / 0.6, 0, 1); g.globalAlpha = a; text('Modelled, not measured', W / 2, 520, 74, FG, { w: 'bold', f: FD, a: 'center' });
   text('An open traffic model of Tashkent’s morning peak', W / 2, 590, 36, AMB, { a: 'center' });
-  ['Roads from OpenStreetMap · demand from census and student data', 'Shortest-path routing with congestion · signal delay 40 s (assumed)', '45% of commuters drive (assumed) · results not yet calibrated'].forEach((s, i) => text(s, W / 2, 680 + i * 44, 26, MUT, { a: 'center' }));
-  text('Code and method: github.com/Avazbek2002/city_traffic', W / 2, 920, 30, FG, { a: 'center' }); g.globalAlpha = 1;
+  ['Shortest-path routing with congestion · signal delay 40 s (assumed)', '45% of commuters drive (assumed) · results not yet calibrated'].forEach((s, i) => text(s, W / 2, 680 + i * 44, 26, MUT, { a: 'center' })); g.globalAlpha = 1;
 }
 function renderFrame(f) {
   const sec = f / FPS, now = sec * 1000; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = BG; g.fillRect(0, 0, W, H); lastDt = 1 / FPS;
