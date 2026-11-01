@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# One-at-a-time sensitivity runs around the base case. Each run is a full set of 16 slices (ITERS=2: about 10-12 min each on a laptop).
-# usage: bash pipeline/run_sensitivity.sh            (all runs, ~1.5 h)   |   RUNS="base car55" bash pipeline/run_sensitivity.sh
+# One-at-a-time sensitivity runs around the base case. Each run is a full set of 16 slices (ITERS=4: about 20 min each on a laptop; ITERS=2 does NOT converge near capacity and gives wrong congestion numbers).
+# usage: bash pipeline/run_sensitivity.sh            (all runs, ~3 h)   |   RUNS="base car55" bash pipeline/run_sensitivity.sh
 # Results: data/work/sens/<run>/slice_stats.csv, then: python3 pipeline/summarize_sensitivity.py data/work/sens
 set -euo pipefail
-W=${W:-data/work}; S=$W/sens; mkdir -p "$S"; export ITERS=${ITERS:-2}
+W=${W:-data/work}; S=$W/sens; mkdir -p "$S"; export ITERS=${ITERS:-4}
 RUNS=${RUNS:-"base car35 car55 early30 mix cap80 cap120 beta_lo beta_hi"}
 for r in $RUNS; do
   case $r in
