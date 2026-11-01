@@ -25,4 +25,5 @@ python3 pipeline/build_trips.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$
 python3 viewer/assemble_viewer.py viewer/viewer_template.html "$W/viewer_data.json" viewer/index.html "$W/trips.json"                    # 13 build the page
 python3 pipeline/build_od_graph.py "$W/road_edges.csv.gz" "$W/mahalla_zones.csv" "$W/students/pa_vectors.npz" "$W/slices/slices_flow.npz" "$DIST" "$W/od_graph.json"   # 14 zone graph data (people per district / mahalla over time)
 python3 viewer/assemble_viewer.py viewer/od_graph_template.html "$W/od_graph.json" viewer/od_graph.html                                                          # 15 build the graph page
-echo "Done. Open viewer/index.html (roads) and viewer/od_graph.html (district / mahalla graph) in a browser."
+python3 viewer/assemble_viewer.py viewer/dashboard_template.html "$W/viewer_data.json" viewer/dashboard.html "$W/trips.json" "$W/od_graph.json"            # 16 all three windows on one page
+echo "Done. Open viewer/dashboard.html (cars + district graph + mahalla graph on one page), or viewer/index.html and viewer/od_graph.html separately."

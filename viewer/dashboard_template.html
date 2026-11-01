@@ -1,0 +1,309 @@
+<meta charset="utf-8">
+<title>Tashkent Morning Dashboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+[hidden] { display: none !important; }
+:root {
+  color-scheme: dark;
+  --bg: #0a1017; --panel: #0f1822; --panel2: #15222f; --line: #1f2f40;
+  --fg: #d9e4ee; --muted: #8499ac; --dim: #4d6277; --amber: #f2b64c;
+  --r0: #3a6a9e; --r1: #3fb0a6; --r2: #e6c84a; --r3: #f08a3c; --r4: #e5484d; --idle: #182636;
+  --work: #e6c84a; --school: #4fb6e8; --college: #9b8cf0; --univ: #ec7f95;
+  --dot-free: #a9c9e6; --dot-mid: #f4c552; --dot-slow: #ff6a5c; --gain: #3fd0b0; --lose: #f0643c;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif; --body: "IBM Plex Sans", system-ui, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); margin: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box; }
+.app { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; height: 100%; min-height: 0; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+h1 { font: 600 26px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
+.hl { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
+button, select { font: 500 12px var(--body); color: var(--fg); background: var(--panel2); border: 1px solid var(--line); border-radius: 4px; padding: 5px 9px; cursor: pointer; }
+button:hover, select:hover { border-color: var(--dim); }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--amber); outline-offset: 1px; }
+.strip { display: flex; flex-wrap: wrap; gap: 8px 26px; align-items: baseline; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 14px; }
+.clock { font: 600 40px/1 var(--display); font-variant-numeric: tabular-nums; min-width: 92px; }
+.stat b { font: 500 18px/1.1 var(--mono); font-variant-numeric: tabular-nums; margin-right: 6px; } .stat span { color: var(--muted); font-size: 12px; }
+/* windows */
+#wins { position: relative; display: grid; gap: 0; min-height: 0; }
+.L-row { grid-template-columns: var(--w1) 6px var(--w2) 6px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "a v1 b v2 c"; }
+.L-stack { grid-template-rows: var(--h1) 6px var(--h2) 6px minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); grid-template-areas: "a" "d1" "b" "d2" "c"; }
+.L-main { grid-template-columns: var(--w1) 6px minmax(0, 1fr); grid-template-rows: var(--h2) 6px minmax(0, 1fr); grid-template-areas: "a v1 b" "a v1 d2" "a v1 c"; }
+.L-row .d1, .L-row .d2, .L-stack .v1, .L-stack .v2, .L-main .v2, .L-main .d1 { display: none; }
+.win { display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+#wA { grid-area: a; } #wB { grid-area: b; } #wC { grid-area: c; }
+.v1 { grid-area: v1; } .v2 { grid-area: v2; } .d1 { grid-area: d1; } .d2 { grid-area: d2; }
+#wins .win.max { grid-area: auto; position: absolute; inset: 0; z-index: 10; }
+.div { background: transparent; position: relative; touch-action: none; }
+.div::after { content: ""; position: absolute; background: var(--line); border-radius: 2px; transition: background .12s; }
+.v1, .v2 { cursor: col-resize; } .v1::after, .v2::after { left: 2px; right: 2px; top: 30%; bottom: 30%; }
+.d1, .d2 { cursor: row-resize; } .d1::after, .d2::after { top: 2px; bottom: 2px; left: 30%; right: 30%; }
+.div:hover::after, .div.on::after { background: var(--amber); }
+.wh { display: flex; align-items: center; gap: 6px 12px; flex-wrap: wrap; padding: 6px 10px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--bg) 40%, var(--panel)); font-size: 12px; color: var(--muted); }
+.wh h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--fg); margin: 0 4px 0 0; }
+.wh label { display: flex; gap: 5px; align-items: center; cursor: pointer; } .wh input { accent-color: var(--amber); }
+.wh .sp { margin-left: auto; }
+.body { position: relative; flex: 1; min-height: 0; touch-action: none; }
+canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.zoom { position: absolute; top: 8px; right: 8px; display: flex; flex-direction: column; gap: 3px; } .zoom button { width: 28px; padding: 4px 0; font-size: 15px; line-height: 1; }
+.tip { position: absolute; pointer-events: none; background: var(--panel2); border: 1px solid var(--dim); border-radius: 5px; padding: 6px 9px; font-size: 12px; line-height: 1.5; white-space: nowrap; z-index: 3; } .tip .m { font-family: var(--mono); }
+.legend { position: absolute; left: 8px; bottom: 8px; display: flex; gap: 4px 12px; flex-wrap: wrap; background: color-mix(in srgb, var(--bg) 82%, transparent); border: 1px solid var(--line); border-radius: 5px; padding: 4px 8px; font-size: 11px; color: var(--muted); max-width: calc(100% - 60px); }
+.legend span { display: flex; align-items: center; gap: 5px; } .legend i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+.ramp { display: flex; height: 6px; width: 90px; border-radius: 2px; overflow: hidden; } .ramp i { flex: 1; border-radius: 0; height: 6px; width: auto; }
+.over { position: absolute; inset: 0; display: grid; place-items: center; background: color-mix(in srgb, var(--bg) 55%, transparent); color: var(--muted); font-size: 13px; text-align: center; padding: 20px; pointer-events: none; }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+#play { width: 72px; } input[type=range] { flex: 1 1 200px; min-width: 160px; accent-color: var(--amber); }
+#tl { flex: 1 1 100%; height: 44px; display: block; cursor: pointer; }
+.note { color: var(--dim); font-size: 11px; }
+@media (max-width: 900px) {
+  html, body { height: auto; } .app { height: auto; display: flex; flex-direction: column; }
+  #wins { display: flex; flex-direction: column; gap: 10px; } .win { height: 68vh; min-height: 380px; } .div { display: none !important; }
+  #wins .win.max { position: fixed; inset: 8px; height: auto; }
+  .clock { font-size: 34px; }
+}
+</style>
+<div class="app">
+  <header>
+    <h1>Tashkent Morning Dashboard</h1>
+    <div class="hl"><span>Layout</span><select id="layout" aria-label="Window layout"><option value="main">Roads + two graphs</option><option value="row">Side by side</option><option value="stack">Stacked</option></select><span class="note">drag the bars between windows to resize · ⛶ maximizes one</span></div>
+  </header>
+  <div class="strip">
+    <div class="clock" id="clock">06:00</div>
+    <div class="stat"><b id="sVeh">–</b><span>vehicles on the road</span></div>
+    <div class="stat"><b id="sSpd">–</b><span>avg speed km/h</span></div>
+    <div class="stat"><b id="sOver">–</b><span>sections over capacity</span></div>
+    <div class="stat"><b id="sMove">–</b><span>people on the move</span></div>
+    <div class="stat"><b id="sDone">–</b><span>arrived</span></div>
+  </div>
+  <div id="wins" class="L-main">
+    <section class="win" id="wA">
+      <div class="wh"><h2>Car flows</h2>
+        <label><input type="checkbox" id="aRoads" checked> Road load</label>
+        <select id="aMode" aria-label="What to draw"><option value="flow">Vehicle flow</option><option value="trips">Individual trips (origin → destination)</option></select>
+        <select id="aFoc" aria-label="Only trips of one district" hidden><option value="0">All districts</option></select>
+        <select id="aDir" aria-label="Trip direction" hidden><option value="any">from or to</option><option value="from">leaving</option><option value="to">arriving</option></select>
+        <select id="aUpd" aria-label="Traffic update interval"><option value="900">Update 15 min</option><option value="300" selected>Update 5 min</option><option value="60">Update 1 min</option></select>
+        <button class="sp max-btn" aria-label="Maximize window" title="Maximize / restore">⛶</button></div>
+      <div class="body" id="bA"><canvas class="layer"></canvas><canvas class="layer"></canvas>
+        <div class="zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="rs" aria-label="Reset view" style="font-size:11px">⌂</button></div>
+        <div class="legend" id="aLeg"></div><div class="over" id="aOver" hidden>The road model covers 06:00–10:00.<br>Arrivals in the graphs continue until 11:00.</div></div>
+    </section>
+    <div class="div v1" data-axis="x" data-var="--w1" data-start="wA" role="separator" aria-label="Resize windows"></div>
+    <div class="div v2" data-axis="x" data-var="--w2" data-start="wB" role="separator" aria-label="Resize windows"></div>
+    <div class="div d1" data-axis="y" data-var="--h1" data-start="wA" role="separator" aria-label="Resize windows"></div>
+    <div class="div d2" data-axis="y" data-var="--h2" data-start="wB" role="separator" aria-label="Resize windows"></div>
+    <section class="win" id="wB">
+      <div class="wh"><h2>Districts</h2><label><input type="checkbox" class="gArc" checked> Flows</label><label><input type="checkbox" class="gGhost" checked> Starting size</label>
+        <select class="gAmp" aria-label="Exaggerate size change"><option value="1">True scale</option><option value="3" selected>Change ×3</option><option value="6">Change ×6</option></select>
+        <button class="sp max-btn" aria-label="Maximize window" title="Maximize / restore">⛶</button></div>
+      <div class="body" id="bB"><canvas class="layer"></canvas><div class="zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="rs" aria-label="Reset view" style="font-size:11px">⌂</button></div><div class="tip" hidden></div>
+        <div class="legend"><span class="ramp"><i style="background:#f0643c"></i><i style="background:#b9714f"></i><i style="background:#6d8299"></i><i style="background:#4fb39e"></i><i style="background:#3fd0b0"></i></span><span>emptied → filled · click a district to filter the car trips</span></div></div>
+    </section>
+    <section class="win" id="wC">
+      <div class="wh"><h2>Mahallas</h2><label><input type="checkbox" class="gArc" checked> Flows</label><label><input type="checkbox" class="gGhost" checked> Starting size</label>
+        <select class="gAmp" aria-label="Exaggerate size change"><option value="1">True scale</option><option value="3" selected>Change ×3</option><option value="6">Change ×6</option></select>
+        <button class="sp max-btn" aria-label="Maximize window" title="Maximize / restore">⛶</button></div>
+      <div class="body" id="bC"><canvas class="layer"></canvas><div class="zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="rs" aria-label="Reset view" style="font-size:11px">⌂</button></div><div class="tip" hidden></div>
+        <div class="legend"><span>zoom in for names · click a mahalla to filter the car trips to its district</span></div></div>
+    </section>
+  </div>
+  <div class="bar">
+    <button id="play">Pause</button><input type="range" id="scrub" min="0" max="17999" value="0" step="1" aria-label="Time of day">
+    <select id="spd" aria-label="Clock speed"><option value="60">60×</option><option value="120">120×</option><option value="300" selected>300×</option><option value="600">600×</option></select>
+    <canvas id="tl" aria-label="Vehicles on the road and people on the move over time"></canvas>
+  </div>
+</div>
+<script>
+const D = __DATA__, TR = __TRIPS__, G = __GRAPH__;
+const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
+const $ = id => document.getElementById(id), css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), lerp = (a, b, w) => a + (b - a) * w;
+const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
+const pad = n => String(n).padStart(2, '0'), fmt = t => { const m = Math.floor(t / 60) + 360; return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); }, nf = n => Math.round(n).toLocaleString('en-US');
+const COSL = Math.cos(41.3 * Math.PI / 180), TMAX = G.nb * G.bin * 60, ROADEND = D.ns * 900;
+const S = { t: 0, playing: true, speed: 300 };   // one clock for every window, seconds after 06:00
+
+// ---------- generic zoom / pan view for one window
+function makeView(body, bounds) {
+  const V = { W: 0, H: 0, DPR: 1, fit: 1, s: 1, cx: (bounds.x0 + bounds.x1) / 2, cy: (bounds.y0 + bounds.y1) / 2, cvs: [...body.querySelectorAll('canvas.layer')], moved: 0, dirty: true };
+  V.sx = x => (x - V.cx) * V.s + V.W / 2; V.sy = y => (y - V.cy) * V.s + V.H / 2; V.k = () => V.s / V.fit;
+  V.resize = () => { V.DPR = Math.min(devicePixelRatio || 1, 2); const r = body.getBoundingClientRect(); if (r.width < 2) return; V.W = r.width; V.H = r.height; V.cvs.forEach(c => { c.width = Math.round(V.W * V.DPR); c.height = Math.round(V.H * V.DPR); });
+    const f = Math.min(V.W / (bounds.x1 - bounds.x0), V.H / (bounds.y1 - bounds.y0)) * 0.92; if (V.s === 1 || Math.abs(V.s / V.fit - 1) < 1e-6) V.s = f; V.fit = f; V.dirty = true; };
+  V.zoomAt = (f, x, y) => { const wx = (x - V.W / 2) / V.s + V.cx, wy = (y - V.H / 2) / V.s + V.cy; V.s = Math.max(V.fit * 0.7, Math.min(V.fit * 40, V.s * f)); V.cx = wx - (x - V.W / 2) / V.s; V.cy = wy - (y - V.H / 2) / V.s; V.dirty = true; };
+  V.reset = () => { V.s = V.fit; V.cx = (bounds.x0 + bounds.x1) / 2; V.cy = (bounds.y0 + bounds.y1) / 2; V.dirty = true; };
+  new ResizeObserver(V.resize).observe(body);
+  body.querySelectorAll('[data-z]').forEach(b => b.onclick = () => { const z = b.dataset.z; if (z === 'rs') V.reset(); else V.zoomAt(z === 'in' ? 1.5 : 1 / 1.5, V.W / 2, V.H / 2); });
+  body.addEventListener('wheel', e => { e.preventDefault(); const r = body.getBoundingClientRect(); V.zoomAt(Math.exp(-e.deltaY * 0.0015), e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+  const ptr = new Map(); let pd0 = 0, down = null;
+  body.addEventListener('pointerdown', e => { if (e.target.closest('.zoom,.legend')) return; body.setPointerCapture(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]); down = [e.clientX, e.clientY]; V.moved = 0; if (ptr.size === 2) { const [a, b] = [...ptr.values()]; pd0 = Math.hypot(a[0] - b[0], a[1] - b[1]); } });
+  body.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) { if (V.onHover) V.onHover(e); return; }
+    const p = ptr.get(e.pointerId); if (down) V.moved = Math.max(V.moved, Math.hypot(e.clientX - down[0], e.clientY - down[1]));
+    if (ptr.size === 1) { V.cx -= (e.clientX - p[0]) / V.s; V.cy -= (e.clientY - p[1]) / V.s; V.dirty = true; } ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = body.getBoundingClientRect(); if (pd0) V.zoomAt(d / pd0, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top); pd0 = d; }
+  });
+  ['pointerup', 'pointercancel'].forEach(t => body.addEventListener(t, e => { const was = ptr.size === 1 && V.moved < 4 && t === 'pointerup'; ptr.delete(e.pointerId); pd0 = 0; if (was && V.onClick) V.onClick(e); }));
+  body.addEventListener('pointerleave', () => { if (V.onLeave) V.onLeave(); });
+  return V;
+}
+const RINGS_LL = G.rings;   // lon/lat polygons of the districts
+const worldB = (pts, f) => { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; pts.forEach(([x, y]) => { const [a, b] = f(x, y); x0 = Math.min(x0, a); x1 = Math.max(x1, a); y0 = Math.min(y0, b); y1 = Math.max(y1, b); }); return { x0, x1, y0, y1 }; };
+const allPts = RINGS_LL.flatMap(r => r.p);
+
+// =====================================================================================  WINDOW A: car flows
+const Q = D.q, lonQ0 = D.lon0, latQ0 = D.lat0;
+const PTS = b64(D.pts, Uint16Array), OFF = b64(D.off, Uint32Array), FLOW = b64(D.flow, Uint16Array), RATIO = b64(D.ratio, Uint8Array), CAP = b64(D.cap, Uint16Array), T0 = b64(D.t0, Uint16Array), N = D.nch, NS = D.ns;
+const NP = PTS.length / 2, WX = new Float32Array(NP), WY = new Float32Array(NP), CUM = new Float32Array(NP), TOT = new Float32Array(N), NX = new Float32Array(N), NY = new Float32Array(N);
+for (let j = 0; j < NP; j++) { WX[j] = PTS[2*j] * Q * COSL; WY[j] = -PTS[2*j+1] * Q; }
+for (let k = 0; k < N; k++) { const a = OFF[k], b = OFF[k+1]; let c = 0; CUM[a] = 0; for (let j = a + 1; j < b; j++) { c += Math.hypot(WX[j]-WX[j-1], WY[j]-WY[j-1]); CUM[j] = c; } TOT[k] = c || 1e-9; const dx = WX[b-1]-WX[a], dy = WY[b-1]-WY[a], l = Math.hypot(dx, dy) || 1; NX[k] = -dy / l; NY[k] = dx / l; }
+const RINGS_A = D.rings.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * Q * COSL, -y * Q]) }));
+const RND1 = new Float32Array(N), RND2 = new Float32Array(N); { let s = 12345; const r = () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; for (let k = 0; k < N; k++) { RND1[k] = r(); RND2[k] = r(); } }
+const COL = ['--r0', '--r1', '--r2', '--r3', '--r4', '--idle'].map(css), DOT = ['--dot-free', '--dot-mid', '--dot-slow'].map(css), TRC = ['--work', '--school', '--college', '--univ'].map(css);
+const VA = makeView($('bA'), worldB(RINGS_A.flatMap(r => r.p), (x, y) => [x, y]));
+const [cAR, cAD] = VA.cvs, gAR = cAR.getContext('2d'), gAD = cAD.getContext('2d');
+const A = { step: 300, bin: -1, show: { roads: true }, mode: 'flow', act: null };
+const CF = new Float32Array(N), CR = new Float32Array(N), SECS = 14400 / NS;
+function sampleA(bin) { const tc = bin * A.step + A.step / 2, pc = Math.max(0, Math.min(NS - 1, tc / SECS - 0.5)), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0; for (let k = 0; k < N; k++) { CF[k] = FLOW[i0*N + k] * (1 - w) + FLOW[i1*N + k] * w; CR[k] = RATIO[i0*N + k] * (1 - w) + RATIO[i1*N + k] * w; } }
+function setBinA(bin) {
+  A.bin = bin; sampleA(bin); const K = 6, ids = [], ph = [], ts = [], cls = [];
+  for (let k = 0; k < N; k++) { const f = CF[k]; if (f < 1) continue; const tsec = Math.max(0.5, T0[k] / 10 * CR[k] / 20), m = f * tsec / 3600 / K; if (m <= 0) continue; const n = Math.ceil(m), ratio = CR[k] / 20;
+    for (let i = 0; i < n; i++) { if (i + RND1[k] >= m) continue; ids.push(k); ph.push((i + RND2[k]) / n); ts.push(tsec); cls.push(ratio < 1.25 ? 0 : ratio < 2 ? 1 : 2); } }
+  A.act = { ids: Int32Array.from(ids), ph: Float32Array.from(ph), ts: Float32Array.from(ts), cls: Uint8Array.from(cls), n: ids.length }; VA.dirty = true;
+}
+function drawRoadsA() {
+  const { W, H, DPR, sx, sy } = VA; gAR.setTransform(DPR, 0, 0, DPR, 0, 0); gAR.clearRect(0, 0, W, H);
+  gAR.lineWidth = 1; gAR.strokeStyle = css('--line'); gAR.fillStyle = 'rgba(255,255,255,0.012)';
+  RINGS_A.forEach(r => { gAR.beginPath(); r.p.forEach(([x, y], i) => i ? gAR.lineTo(sx(x), sy(y)) : gAR.moveTo(sx(x), sy(y))); gAR.closePath(); gAR.fill(); gAR.stroke(); });
+  if (A.bin < 0 || S.t >= ROADEND || !A.show.roads) return;
+  const kz = VA.k(), off = Math.min(2.4, 0.9 + 0.35 * Math.log2(kz + 1)), wz = 0.55 + 0.45 * Math.log2(kz + 1), paths = [0, 1, 2, 3, 4, 5].map(() => new Path2D());
+  for (let k = 0; k < N; k++) { const f = CF[k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b], a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(sx(WX[a]) + ox, sy(WY[a]) + oy); for (let j = a + 1; j < e; j++) p.lineTo(sx(WX[j]) + ox, sy(WY[j]) + oy); }
+  gAR.lineCap = 'round'; gAR.lineJoin = 'round'; [5, 0, 1, 2, 3, 4].forEach(b => { gAR.strokeStyle = COL[b]; gAR.lineWidth = (b === 5 ? 0.6 : 0.8 + b * 0.35) * wz; gAR.stroke(paths[b]); });
+}
+let TP = null;
+if (TR) {
+  const n = TR.n, X = b64(TR.x, Uint16Array), Y = b64(TR.y, Uint16Array), TQ = b64(TR.tq, Uint16Array), OF = b64(TR.off, Uint32Array), DEP = b64(TR.dep, Uint16Array), PU = b64(TR.pur, Uint8Array), O = b64(TR.o, Uint16Array), De = b64(TR.d, Uint16Array);
+  const TX = new Float32Array(X.length), TY = new Float32Array(X.length), TTm = new Float32Array(X.length); for (let j = 0; j < X.length; j++) { TX[j] = X[j] * Q * COSL; TY[j] = -Y[j] * Q; TTm[j] = TQ[j] / 10; }
+  const arr = new Float32Array(n); for (let i = 0; i < n; i++) arr[i] = DEP[i] + TTm[OF[i+1] - 1];
+  TP = { n, TX, TY, TTm, OF, DEP, PU, O, De, arr, Z: TR.zones, foc: 0, dir: 'any' };
+  [...new Set(TR.zones.map(z => z.d))].sort().forEach(d => $('aFoc').insertAdjacentHTML('beforeend', `<option value="${d}">${NAMES[d] || d}</option>`));
+} else $('aMode').querySelector('[value=trips]').remove();
+const tripMatch = i => { if (!TP.foc) return true; const od = TP.Z[TP.O[i]].d === TP.foc, dd = TP.Z[TP.De[i]].d === TP.foc; return TP.dir === 'from' ? od : TP.dir === 'to' ? dd : (od || dd); };
+function drawDotsA(now) {
+  const { W, H, DPR, sx, sy } = VA; gAD.setTransform(DPR, 0, 0, DPR, 0, 0); gAD.clearRect(0, 0, W, H); const kz = VA.k();
+  if (S.t >= ROADEND) return;
+  if (A.mode === 'trips' && TP) {
+    const t = S.t, sz = 2.6 + 0.9 * Math.log2(kz + 1), focus = !!TP.foc;
+    for (let i = 0; i < TP.n; i++) {
+      const dep = TP.DEP[i], rel = t - dep; if (rel < -60 || rel > TP.arr[i] - dep + 90 || !tripMatch(i)) continue; const a = TP.OF[i], e = TP.OF[i+1], dur = TP.arr[i] - dep, c = TRC[TP.PU[i]];
+      if (rel < 90) { gAD.strokeStyle = '#7ee0a3'; gAD.lineWidth = 1; gAD.globalAlpha = rel < 0 ? 0.9 : 0.9 * (1 - rel / 90); gAD.beginPath(); gAD.arc(sx(TP.TX[a]), sy(TP.TY[a]), sz * 1.8, 0, 6.2832); gAD.stroke(); }
+      if (rel >= dur) { gAD.fillStyle = '#fff'; gAD.globalAlpha = 0.9 * Math.max(0, 1 - (rel - dur) / 90); gAD.beginPath(); gAD.arc(sx(TP.TX[e-1]), sy(TP.TY[e-1]), sz * 1.4, 0, 6.2832); gAD.fill(); continue; }
+      if (rel < 0) continue; let j = a + 1; while (j < e - 1 && TP.TTm[j] < rel) j++;
+      const dt = TP.TTm[j] - TP.TTm[j-1] || 1e-9, q = Math.min(1, Math.max(0, (rel - TP.TTm[j-1]) / dt)), x = TP.TX[j-1] + (TP.TX[j] - TP.TX[j-1]) * q, y = TP.TY[j-1] + (TP.TY[j] - TP.TY[j-1]) * q;
+      if (focus || kz > 2.5) { gAD.strokeStyle = c; gAD.lineWidth = 1; gAD.globalAlpha = 0.28; gAD.beginPath(); gAD.moveTo(sx(TP.TX[a]), sy(TP.TY[a])); for (let m = a + 1; m < j; m++) gAD.lineTo(sx(TP.TX[m]), sy(TP.TY[m])); gAD.lineTo(sx(x), sy(y)); gAD.stroke(); }
+      gAD.globalAlpha = 1; gAD.fillStyle = c; gAD.beginPath(); gAD.arc(sx(x), sy(y), sz, 0, 6.2832); gAD.fill();
+    }
+    gAD.globalAlpha = 1; return;
+  }
+  if (!A.act) return; const mt = now / 1000 * 20, off = Math.min(2.4, 0.9 + 0.35 * Math.log2(kz + 1)), sz = 1.4 + 0.5 * Math.log2(kz + 1), act = A.act;
+  for (let c = 0; c < 3; c++) { gAD.fillStyle = DOT[c]; for (let i = 0; i < act.n; i++) { if (act.cls[i] !== c) continue; const k = act.ids[i]; const u = (act.ph[i] + mt / act.ts[i]) % 1, d = u * TOT[k], a = OFF[k], e = OFF[k+1]; let j = a + 1; while (j < e - 1 && CUM[j] < d) j++;
+    const l = CUM[j] - CUM[j-1] || 1e-9, q = (d - CUM[j-1]) / l, x = WX[j-1] + (WX[j] - WX[j-1]) * q, y = WY[j-1] + (WY[j] - WY[j-1]) * q, px = sx(x) + NX[k] * off, py = sy(y) + NY[k] * off; if (px < -4 || py < -4 || px > W + 4 || py > H + 4) continue; gAD.fillRect(px - sz / 2, py - sz / 2, sz, sz); } }
+}
+function legendA() { $('aLeg').innerHTML = A.mode === 'trips'
+  ? [['--work', 'commuter'], ['--school', 'school run'], ['--college', 'college'], ['--univ', 'university']].map(([c, t]) => `<span><i style="background:var(${c})"></i>${t}</span>`).join('') + '<span><i style="border:2px solid #7ee0a3;box-sizing:border-box"></i>origin</span><span><i style="background:#fff"></i>destination</span><span>1 dot = ' + (TR ? TR.k : '') + ' cars</span>'
+  : '<span><i style="background:var(--dot-free)"></i>free flow</span><span><i style="background:var(--dot-mid)"></i>slowed</span><span><i style="background:var(--dot-slow)"></i>crawling</span><span>1 dot ≈ 6 cars · road colour = load / capacity</span>'; }
+legendA();
+
+// =====================================================================================  WINDOWS B, C: zone graphs
+const LV = {
+  dist: { name: G.dist.id.map(d => NAMES[d] || d), did: G.dist.id, x: G.dist.x, y: G.dist.y, base: G.dist.base, pres: G.dist.present, rmax: 34, rmin: 4 },
+  mah: { name: G.mah.name, did: G.mah.d, x: G.mah.x, y: G.mah.y, base: G.mah.base, pres: G.mah.present, rmax: 15, rmin: 1.3 }
+};
+for (const k in LV) { const l = LV[k]; l.n = l.x.length; l.wx = l.x.map(v => v * COSL); l.wy = l.y.map(v => -v); l.max = Math.max(...l.pres.flat(), ...l.base); }
+const RINGS_G = RINGS_LL.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * COSL, -y]) })), BG = worldB(RINGS_G.flatMap(r => r.p), (x, y) => [x, y]);
+const COLG = ratio => { const v = Math.max(-1, Math.min(1, Math.log2(Math.max(ratio, 0.01)) / 1.6)); if (v < 0) { const k = -v; return `rgb(${Math.round(lerp(109, 240, k))},${Math.round(lerp(130, 100, k))},${Math.round(lerp(153, 60, k))})`; } return `rgb(${Math.round(lerp(109, 63, v))},${Math.round(lerp(130, 208, v))},${Math.round(lerp(153, 176, v))})`; };
+function makeGraph(bodyId, key) {
+  const body = $(bodyId), win = body.closest('.win'), V = makeView(body, BG), cv = V.cvs[0], g = cv.getContext('2d'), l = LV[key], tip = body.querySelector('.tip');
+  const P = { V, arcs: true, ghost: true, amp: 3, hover: -1, pr: new Float32Array(l.n), l };
+  win.querySelector('.gArc').onchange = e => { P.arcs = e.target.checked; }; win.querySelector('.gGhost').onchange = e => { P.ghost = e.target.checked; }; win.querySelector('.gAmp').onchange = e => { P.amp = +e.target.value; };
+  const zk = () => Math.min(2.2, Math.max(0.8, Math.pow(V.k(), 0.35))) * Math.max(0.4, Math.min(1.6, Math.min(V.W, V.H) / 640));
+  const rad = (v, k) => { let e = v; if (P.amp !== 1 && l.base[k] > 5) { const r = v / l.base[k]; e = l.base[k] * Math.max(0.03, 1 + (r - 1) * P.amp); } return Math.min(l.rmax * 1.7, Math.max(l.rmin, l.rmax * Math.sqrt(e / l.max))) * zk(); };
+  P.rad = rad;
+  P.draw = now => {
+    const { W, H, DPR, sx, sy } = V; g.setTransform(DPR, 0, 0, DPR, 0, 0); g.clearRect(0, 0, W, H);
+    g.lineWidth = 1; g.strokeStyle = '#1f2f40'; g.fillStyle = 'rgba(255,255,255,0.012)'; RINGS_G.forEach(r => { g.beginPath(); r.p.forEach(([x, y], i) => i ? g.lineTo(sx(x), sy(y)) : g.moveTo(sx(x), sy(y))); g.closePath(); g.fill(); g.stroke(); });
+    const p = Math.min(G.nb - 1e-6, S.t / (G.bin * 60)), i0 = Math.floor(p), w = p - i0, a = l.pres[i0], b = l.pres[i0 + 1], pr = P.pr; for (let k = 0; k < l.n; k++) pr[k] = lerp(a[k], b[k], w);
+    if (P.arcs) {
+      const s = Math.floor(S.t / 900); let fl = [];
+      if (s < G.ns) { if (key === 'dist') { const m = G.dist.flow[s]; for (let i = 0; i < l.n; i++) for (let j = 0; j < l.n; j++) if (m[i][j] > 50) fl.push([i, j, m[i][j]]); } else fl = G.mah.links[s].slice(0, 160); }
+      const mx = Math.max(1, ...fl.map(f => f[2])), zz = zk(); g.lineCap = 'round';
+      for (const [i, j, v] of fl) { const x0 = sx(l.wx[i]), y0 = sy(l.wy[i]), x1 = sx(l.wx[j]), y1 = sy(l.wy[j]), mxp = (x0 + x1) / 2, myp = (y0 + y1) / 2, cx = mxp - (y1 - y0) * 0.18, cy = myp + (x1 - x0) * 0.18, wd = (key === 'dist' ? 0.6 + 6 * Math.sqrt(v / mx) : 0.4 + 2.2 * Math.sqrt(v / mx)) * zz;
+        g.strokeStyle = 'rgba(242,182,76,' + (key === 'dist' ? 0.16 + 0.3 * v / mx : 0.12 + 0.3 * v / mx) + ')'; g.lineWidth = wd; g.beginPath(); g.moveTo(x0, y0); g.quadraticCurveTo(cx, cy, x1, y1); g.stroke();
+        const nd = Math.min(6, 1 + Math.floor(5 * v / mx)); g.fillStyle = '#ffd98a'; for (let q = 0; q < nd; q++) { const u = ((now / 1000) * 0.35 + q / nd + (i * 7 + j * 13) % 10 / 10) % 1, aa = (1 - u) * (1 - u), bb = 2 * u * (1 - u), cc = u * u; g.beginPath(); g.arc(aa * x0 + bb * cx + cc * x1, aa * y0 + bb * cy + cc * y1, (key === 'dist' ? 2.2 : 1.3) * zz, 0, 6.2832); g.fill(); } }
+    }
+    if (P.ghost) { g.setLineDash([3, 3]); g.strokeStyle = 'rgba(217,228,238,0.35)'; for (let k = 0; k < l.n; k++) { if (l.base[k] <= 0) continue; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), rad(l.base[k], k), 0, 6.2832); g.stroke(); } g.setLineDash([]); }
+    const order = Array.from({ length: l.n }, (_, k) => k).sort((x, y) => pr[y] - pr[x]); const fd = TP ? TP.foc : 0;
+    for (const k of order) { const ratio = l.base[k] > 5 ? pr[k] / l.base[k] : (pr[k] > 5 ? 8 : 1); g.fillStyle = COLG(ratio); g.globalAlpha = 0.82; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), rad(pr[k], k), 0, 6.2832); g.fill(); g.globalAlpha = 1;
+      if (k === P.hover || (fd && l.did[k] === fd)) { g.strokeStyle = k === P.hover ? '#fff' : '#f2b64c'; g.lineWidth = 1.5; g.stroke(); } }
+    if (key === 'dist') { g.font = '600 11px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; for (let k = 0; k < l.n; k++) { const ch = l.base[k] > 5 ? Math.round((pr[k] / l.base[k] - 1) * 100) : 0; g.fillStyle = '#d9e4ee'; g.fillText(l.name[k], sx(l.wx[k]), sy(l.wy[k]) - rad(pr[k], k) - 5); g.fillStyle = ch > 0 ? '#3fd0b0' : ch < 0 ? '#f0643c' : '#8499ac'; g.fillText((ch > 0 ? '+' : ch < 0 ? '−' : '') + Math.abs(ch) + '%', sx(l.wx[k]), sy(l.wy[k]) + 4); } }
+    else if (V.k() > 4) { g.font = '10px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#8499ac'; for (let k = 0; k < l.n; k++) { const x = sx(l.wx[k]), y = sy(l.wy[k]); if (x > 0 && y > 0 && x < W && y < H && pr[k] > 800) g.fillText(l.name[k], x, y - rad(pr[k], k) - 3); } }
+  };
+  const find = e => { const r = body.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let best = -1, bd = 1e9; for (let k = 0; k < l.n; k++) { const d = Math.hypot(V.sx(l.wx[k]) - mx, V.sy(l.wy[k]) - my); if (d < Math.max(rad(P.pr[k], k), 6) && d < bd) { bd = d; best = k; } } return [best, mx, my]; };
+  V.onHover = e => { const [k, mx, my] = find(e); P.hover = k; if (k < 0) { tip.hidden = true; return; } const dv = P.pr[k] - l.base[k]; tip.hidden = false;
+    tip.innerHTML = `<b>${l.name[k]}</b>${key === 'mah' ? ' · ' + (NAMES[l.did[k]] || '') : ''}<br>now <span class="m">${nf(P.pr[k])}</span> · at 06:00 <span class="m">${nf(l.base[k])}</span><br>change <span class="m" style="color:${dv >= 0 ? 'var(--gain)' : 'var(--lose)'}">${dv >= 0 ? '+' : '−'}${nf(Math.abs(dv))}</span>`; tip.style.left = Math.min(mx + 14, V.W - 190) + 'px'; tip.style.top = Math.max(8, my - 10) + 'px'; };
+  V.onLeave = () => { P.hover = -1; tip.hidden = true; };
+  V.onClick = e => { if (!TP) return; const [k] = find(e); const d = k < 0 ? 0 : l.did[k]; setFocus(TP.foc === d ? 0 : d); };   // click = show only that district's car trips
+  return P;
+}
+const PB = makeGraph('bB', 'dist'), PC = makeGraph('bC', 'mah');
+function setFocus(d) { if (!TP) return; TP.foc = d; $('aFoc').value = String(d); if (d && A.mode !== 'trips') setMode('trips'); }
+function setMode(m) { A.mode = m; $('aMode').value = m; $('aFoc').hidden = $('aDir').hidden = m !== 'trips'; legendA(); }
+$('aMode').onchange = e => setMode(e.target.value); $('aFoc').onchange = e => { TP.foc = +e.target.value; }; $('aDir').onchange = e => { TP.dir = e.target.value; };
+$('aRoads').onchange = e => { A.show.roads = e.target.checked; VA.dirty = true; }; $('aUpd').onchange = e => { A.step = +e.target.value; A.bin = -1; };
+
+// =====================================================================================  clock, stats, timeline, loop
+function stats(t) {
+  const pc = Math.max(0, Math.min(NS - 1, t / 900 - 0.5)), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0, a = D.stats[i0], b = D.stats[i1], r = x => lerp(a[x], b[x], w);
+  const road = t < ROADEND; $('sVeh').textContent = road ? nf(r('veh_on_network')) : '–'; $('sSpd').textContent = road ? r('avg_speed_kmh').toFixed(1) : '–'; $('sOver').textContent = road ? nf(r('edges_vc_gt1')) : '–';
+  const p = Math.min(G.nb - 1e-6, t / (G.bin * 60)), j = Math.floor(p), f = p - j, mov = lerp(G.transit[j], G.transit[j + 1], f), dep = lerp(G.departed[j], G.departed[j + 1], f); $('sMove').textContent = nf(mov); $('sDone').textContent = nf(dep - mov);
+}
+const cT = $('tl'), gT = cT.getContext('2d');
+function drawTL() {
+  const r = cT.getBoundingClientRect(), w = r.width, h = r.height, d = Math.min(devicePixelRatio || 1, 2); if (cT.width !== Math.round(w * d)) { cT.width = Math.round(w * d); cT.height = Math.round(h * d); }
+  gT.setTransform(d, 0, 0, d, 0, 0); gT.clearRect(0, 0, w, h); const Lm = 4, Rm = 4, T = 4, B = 14, X = t => Lm + (w - Lm - Rm) * t / TMAX, mv = Math.max(...G.transit), vv = Math.max(...D.stats.map(x => x.veh_on_network));
+  gT.strokeStyle = '#1f2f40'; gT.beginPath(); gT.moveTo(Lm, h - B); gT.lineTo(w - Rm, h - B); gT.stroke();
+  const line = (pts, col) => { gT.beginPath(); pts.forEach(([x, y], i) => i ? gT.lineTo(x, y) : gT.moveTo(x, y)); gT.strokeStyle = col; gT.lineWidth = 1.5; gT.stroke(); };
+  line(G.transit.map((v, i) => [X(i * G.bin * 60), T + (h - T - B) * (1 - v / mv)]), '#3fd0b0'); line(D.stats.map((x, i) => [X(i * 900 + 450), T + (h - T - B) * (1 - x.veh_on_network / vv)]), '#f2b64c');
+  const px = X(S.t); gT.strokeStyle = '#d9e4ee'; gT.lineWidth = 1; gT.beginPath(); gT.moveTo(px, T); gT.lineTo(px, h - B); gT.stroke();
+  gT.font = '10px "IBM Plex Mono", monospace'; gT.fillStyle = '#8499ac'; ['06', '07', '08', '09', '10', '11'].forEach((t, i) => { gT.textAlign = i === 5 ? 'right' : i === 0 ? 'left' : 'center'; gT.fillText(t + ':00', Lm + (w - Lm - Rm) * i / 5, h - 2); });
+  gT.textAlign = 'left'; gT.fillStyle = '#f2b64c'; gT.fillText('— vehicles on the road', Lm + 6, 11); gT.fillStyle = '#3fd0b0'; gT.fillText('— people on the move', Lm + 6 + gT.measureText('— vehicles on the road').width + 16, 11);
+}
+cT.addEventListener('click', e => { const r = cT.getBoundingClientRect(); S.t = Math.max(0, Math.min(TMAX - 1, (e.clientX - r.left - 4) / (r.width - 8) * TMAX)); });
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now; if (S.playing) { S.t += dt * S.speed; if (S.t >= TMAX - 1) S.t = 0; }
+  $('clock').textContent = fmt(S.t); $('scrub').value = Math.floor(S.t); stats(S.t); drawTL();
+  const bin = Math.floor(S.t / A.step); if (S.t < ROADEND && bin !== A.bin) setBinA(bin); $('aOver').hidden = S.t < ROADEND;
+  if (VA.W) { drawRoadsA(); drawDotsA(now); } [PB, PC].forEach(P => { if (P.V.W) P.draw(now); });
+  requestAnimationFrame(frame);
+}
+$('play').onclick = () => { S.playing = !S.playing; $('play').textContent = S.playing ? 'Pause' : 'Play'; };
+$('scrub').max = TMAX - 1; $('scrub').oninput = e => { S.t = +e.target.value; }; $('spd').onchange = e => { S.speed = +e.target.value; };
+window.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); $('play').click(); } });
+
+// =====================================================================================  window layout: presets, draggable dividers, maximize
+const wins = $('wins'), root = document.documentElement;
+const DEF = { main: { '--w1': '56%', '--h2': '50%' }, row: { '--w1': '36%', '--w2': '32%' }, stack: { '--h1': '36%', '--h2': '30%' } };
+function setLayout(k) { wins.className = 'L-' + k; Object.entries(DEF[k]).forEach(([a, b]) => wins.style.setProperty(a, b)); wins.querySelectorAll('.win.max').forEach(w => w.classList.remove('max')); wins.querySelectorAll('.tip').forEach(t => { t.hidden = true; }); }
+$('layout').onchange = e => setLayout(e.target.value); setLayout('main');
+wins.querySelectorAll('.div').forEach(dv => {
+  dv.addEventListener('pointerdown', e => { dv.setPointerCapture(e.pointerId); dv.classList.add('on'); const ax = dv.dataset.axis, v = dv.dataset.var, st = $(dv.dataset.start);
+    const mv = ev => { const r = st.getBoundingClientRect(), c = wins.getBoundingClientRect(), tot = ax === 'x' ? c.width : c.height, px = ax === 'x' ? ev.clientX - r.left : ev.clientY - r.top; wins.style.setProperty(v, Math.max(140, Math.min(tot - 160, px)) + 'px'); };
+    const up = () => { dv.classList.remove('on'); dv.removeEventListener('pointermove', mv); dv.removeEventListener('pointerup', up); dv.removeEventListener('pointercancel', up); };
+    dv.addEventListener('pointermove', mv); dv.addEventListener('pointerup', up); dv.addEventListener('pointercancel', up); });
+});
+wins.querySelectorAll('.max-btn').forEach(b => b.onclick = () => { const w = b.closest('.win'), on = !w.classList.contains('max'); wins.querySelectorAll('.win.max').forEach(x => x.classList.remove('max')); if (on) w.classList.add('max'); });
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { S.playing = false; $('play').textContent = 'Play'; }
+requestAnimationFrame(t => { last = t; frame(t); });
+</script>

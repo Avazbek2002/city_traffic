@@ -83,3 +83,9 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 ## Zone graph (districts and mahallas)
 
 `pipeline/build_od_graph.py` + `viewer/od_graph_template.html` give a second page, `viewer/od_graph.html`. Every district (or mahalla, switchable) is a circle placed at its centre; the circle area is the number of people currently in it, so it shrinks as people leave for work or school and grows where they arrive. Arcs show who leaves in the current 15 minutes. People counted: everyone with a modelled morning trip (work, school, college, university; all modes), starting at home at 06:00. Arrival uses the congested car time for everybody (an assumption: walkers and bus riders are really slower). Run it with the same `CAR_WORK` / `BETA_*` / `WORK_PROFILE` as the slices.
+
+## Dashboard (three windows on one page)
+
+`viewer/dashboard_template.html` puts the car-flow simulation, the district graph and the mahalla graph on one page with a shared clock (06:00-11:00; the road model itself ends at 10:00, the graphs show arrivals until 11:00). Drag the bars between windows to resize them, use the maximize button on any window, or pick another layout (roads + two graphs, side by side, stacked). Clicking a district or mahalla circle filters the car trips to that district. Build it with:
+
+    python3 viewer/assemble_viewer.py viewer/dashboard_template.html data/work/viewer_data.json viewer/dashboard.html data/work/trips.json data/work/od_graph.json
