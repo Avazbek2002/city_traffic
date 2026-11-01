@@ -58,7 +58,7 @@ const MINA = Math.min(...DA.stats.map(s => s.avg_speed_kmh)), MINB = Math.min(..
 const peakSoFar = (R, t) => { let m = 0; for (let u = 0; u <= t; u += 300) m = Math.max(m, R.stat(u).veh); return Math.max(m, R.stat(t).veh); };
 function legendRamp(x, y, cols, l, r) { const W_ = 230, w = W_ / cols.length; x -= W_ - 120; cols.forEach((c, i) => { g.fillStyle = c; g.fillRect(x + i * w, y, w, 8); }); text(l, x, y + 28, 18, MUT); text(r, x + W_, y + 28, 18, MUT, { a: 'right' }); }
 function footnote() { text('Model output — not measured traffic', 54, H - 16, 20, DIM); }
-function title(t) { text('Same city, different start times', 54, 84, 46, FG, { w: 'bold', f: FD }); text('Tashkent morning commute, simulated', 56, 124, 24, MUT); text(clock(t), W - 54, 124, 92, AMB, { w: 'bold', f: FD, a: 'right' }); }
+function title(t) { text('Same city, different start times', 54, 84, 40, FG, { w: 'bold', f: FD }); text('Tashkent morning commute, simulated', 56, 124, 24, MUT); text(clock(t), W - 54, 124, 84, AMB, { w: 'bold', f: FD, a: 'right' }); }
 function panel(R, x, label, sub, col, t, dt, peakNow) {
   text(label, x + 270, 232, 30, col, { w: 'bold', f: FD, a: 'center' }); text(sub, x + 270, 258, 19, MUT, { a: 'center' });
   roadsDraw(R, { x, y: 272, w: 540, h: 700 }, t, dt, 9);
