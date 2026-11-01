@@ -1,0 +1,97 @@
+<!doctype html><meta charset="utf-8"><title>Tashkent video stage</title>
+<style>html,body{margin:0;background:#0a1017}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+// Deterministic frame renderer: window.renderFrame(f) draws frame f (0-based, call in order) on a 1080x1350 canvas. Scenes: side-by-side road flows, summary, end card.
+const DA = __DATA_A__, DB = __DATA_B__;
+const W = 1080, H = 1350, FPS = 30, COSL = Math.cos(41.3 * Math.PI / 180), BG = '#0a1017', LINE = '#1f2f40', FG = '#d9e4ee', MUT = '#8499ac', DIM = '#4d6277', AMB = '#f2b64c', TEAL = '#3fd0b0', ORG = '#f0643c';
+const FD = '"Liberation Sans Narrow","DejaVu Sans Condensed",Arial,sans-serif', FB = '"Liberation Sans",Arial,sans-serif', FM = '"DejaVu Sans Mono",monospace';
+const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
+const lerp = (a, b, w) => a + (b - a) * w, clamp = (v, a, b) => Math.max(a, Math.min(b, v)), nf = n => Math.round(n).toLocaleString('en-US'), pad = n => String(n).padStart(2, '0');
+const clock = t => { const m = Math.floor(t / 60) + 360; return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); };
+const rngSeed = s => () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296;
+function fitRect(b, r, pad = 0.94) { const s = Math.min(r.w / (b.x1 - b.x0), r.h / (b.y1 - b.y0)) * pad, cx = (b.x0 + b.x1) / 2, cy = (b.y0 + b.y1) / 2; return { s, X: x => r.x + r.w / 2 + (x - cx) * s, Y: y => r.y + r.h / 2 + (y - cy) * s }; }
+function text(s, x, y, size, col, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; g.fillStyle = col; g.textAlign = o.a || 'left'; g.globalAlpha = o.al === undefined ? 1 : o.al; g.fillText(s, x, y); g.globalAlpha = 1; }
+function tw(s, size, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; return g.measureText(s).width; }
+function wrap(s, x, y, maxW, size, col, lh, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; const words = s.split(' '); let line = '', yy = y; for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { text(line, x, yy, size, col, o); line = w; yy += lh; } else line = t; } text(line, x, yy, size, col, o); return yy; }
+const bounds = rings => { let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; rings.forEach(p => p.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); })); return { x0, x1, y0, y1 }; };
+
+// ---------------------------------------------------------------- road flows
+function roadsSet(D) {
+  const R = { D, Q: D.q, N: D.nch, NS: D.ns }, Q = R.Q, N = R.N;
+  R.PTS = b64(D.pts, Uint16Array); R.OFF = b64(D.off, Uint32Array); R.FLOW = b64(D.flow, Uint16Array); R.RATIO = b64(D.ratio, Uint8Array); R.CAP = b64(D.cap, Uint16Array); R.T0 = b64(D.t0, Uint16Array);
+  const NP = R.PTS.length / 2; R.WX = new Float32Array(NP); R.WY = new Float32Array(NP); R.CUM = new Float32Array(NP); R.TOT = new Float32Array(N); R.NX = new Float32Array(N); R.NY = new Float32Array(N);
+  for (let j = 0; j < NP; j++) { R.WX[j] = R.PTS[2*j] * Q * COSL; R.WY[j] = -R.PTS[2*j+1] * Q; }
+  for (let k = 0; k < N; k++) { const a = R.OFF[k], b = R.OFF[k+1]; let c = 0; R.CUM[a] = 0; for (let j = a + 1; j < b; j++) { c += Math.hypot(R.WX[j]-R.WX[j-1], R.WY[j]-R.WY[j-1]); R.CUM[j] = c; } R.TOT[k] = c || 1e-9; const dx = R.WX[b-1]-R.WX[a], dy = R.WY[b-1]-R.WY[a], l = Math.hypot(dx, dy) || 1; R.NX[k] = -dy / l; R.NY[k] = dx / l; }
+  const r = rngSeed(12345); R.R1 = new Float32Array(N); R.R2 = new Float32Array(N); for (let k = 0; k < N; k++) { R.R1[k] = r(); R.R2[k] = r(); }
+  R.acc = new Float32Array(N); R.CF = new Float32Array(N); R.CR = new Float32Array(N);
+  R.rings = D.rings.map(r => r.p.map(([x, y]) => [x * Q * COSL, -y * Q])); R.b = bounds(R.rings);
+  R.stat = t => { const pc = clamp(t / 900 - 0.5, 0, R.NS - 1), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, R.NS - 1), w = pc - i0, a = D.stats[i0], b = D.stats[i1]; return { veh: lerp(a.veh_on_network, b.veh_on_network, w), spd: lerp(a.avg_speed_kmh, b.avg_speed_kmh, w) }; };
+  return R;
+}
+const RC = ['#3a6a9e', '#3fb0a6', '#e6c84a', '#f08a3c', '#e5484d', '#182636'], DOTC = ['#a9c9e6', '#f4c552', '#ff6a5c'];
+function roadsDraw(R, rect, t, dt, K = 8) {
+  const { N, NS, OFF, WX, WY, CUM, TOT, NX, NY, CF, CR, FLOW, RATIO, CAP, T0 } = R, fr = fitRect(R.b, rect), X = fr.X, Y = fr.Y;
+  const pc = clamp(t / 900 - 0.5, 0, NS - 1), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0;
+  for (let k = 0; k < N; k++) { CF[k] = FLOW[i0*N + k] * (1 - w) + FLOW[i1*N + k] * w; CR[k] = RATIO[i0*N + k] * (1 - w) + RATIO[i1*N + k] * w; }
+  g.save(); g.beginPath(); g.rect(rect.x, rect.y, rect.w, rect.h); g.clip();
+  g.lineWidth = 1; g.strokeStyle = LINE; g.fillStyle = 'rgba(255,255,255,0.014)'; R.rings.forEach(p => { g.beginPath(); p.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath(); g.fill(); g.stroke(); });
+  const sc = rect.w / 800, off = 1.0 * sc, paths = [0, 1, 2, 3, 4, 5].map(() => new Path2D());
+  for (let k = 0; k < N; k++) { const f = CF[k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b], a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(X(WX[a]) + ox, Y(WY[a]) + oy); for (let j = a + 1; j < e; j++) p.lineTo(X(WX[j]) + ox, Y(WY[j]) + oy); }
+  g.lineCap = 'round'; g.lineJoin = 'round'; [5, 0, 1, 2, 3, 4].forEach(b => { g.strokeStyle = RC[b]; g.lineWidth = (b === 5 ? 0.7 : 1.0 + b * 0.45) * sc; g.stroke(paths[b]); });
+  const sz = 2.1 * sc; let last = -1; g.globalAlpha = 0.9;
+  for (let k = 0; k < N; k++) {
+    const f = CF[k]; if (f < 1) continue; const ts = Math.max(0.5, T0[k] / 10 * CR[k] / 20), m = f * ts / 3600 / K; if (m <= 0) continue; R.acc[k] = (R.acc[k] + dt * 14 / ts) % 1;
+    const n = Math.ceil(m), ratio = CR[k] / 20, cl = ratio < 1.25 ? 0 : ratio < 2 ? 1 : 2, a = OFF[k], e = OFF[k+1];
+    for (let i = 0; i < n; i++) { if (i + R.R1[k] >= m) continue; const u = ((i + R.R2[k]) / n + R.acc[k]) % 1, d = u * TOT[k]; let j = a + 1; while (j < e - 1 && CUM[j] < d) j++;
+      const l = CUM[j] - CUM[j-1] || 1e-9, q = (d - CUM[j-1]) / l, x = WX[j-1] + (WX[j] - WX[j-1]) * q, y = WY[j-1] + (WY[j] - WY[j-1]) * q; if (cl !== last) { g.fillStyle = DOTC[cl]; last = cl; } g.fillRect(X(x) + NX[k] * off - sz / 2, Y(y) + NY[k] * off - sz / 2, sz, sz); }
+  }
+  g.globalAlpha = 1; g.restore();
+}
+// ---------------------------------------------------------------- scenes: two cities, same people, different start times
+const RA = roadsSet(DA), RB = roadsSet(DB);
+const PLAY = [0.8, 16.3], SUM = [16.3, 21.5], END = [21.5, 25], TOTAL = END[1], TMAX = 14400;
+const PEAKA = Math.max(...DA.stats.map(s => s.veh_on_network)), PEAKB = Math.max(...DB.stats.map(s => s.veh_on_network));
+const MINA = Math.min(...DA.stats.map(s => s.avg_speed_kmh)), MINB = Math.min(...DB.stats.map(s => s.avg_speed_kmh));
+const peakSoFar = (R, t) => { let m = 0; for (let u = 0; u <= t; u += 300) m = Math.max(m, R.stat(u).veh); return Math.max(m, R.stat(t).veh); };
+function legendRamp(x, y, cols, l, r) { const W_ = 230, w = W_ / cols.length; x -= W_ - 120; cols.forEach((c, i) => { g.fillStyle = c; g.fillRect(x + i * w, y, w, 8); }); text(l, x, y + 28, 18, MUT); text(r, x + W_, y + 28, 18, MUT, { a: 'right' }); }
+function footnote() { text('Model output — not measured traffic', 54, H - 16, 20, DIM); }
+function title(t) { text('Same city, different start times', 54, 84, 46, FG, { w: 'bold', f: FD }); text('Tashkent morning commute, simulated', 56, 124, 24, MUT); text(clock(t), W - 54, 124, 92, AMB, { w: 'bold', f: FD, a: 'right' }); }
+function panel(R, x, label, sub, col, t, dt, peakNow) {
+  text(label, x + 270, 232, 30, col, { w: 'bold', f: FD, a: 'center' }); text(sub, x + 270, 258, 19, MUT, { a: 'center' });
+  roadsDraw(R, { x, y: 272, w: 540, h: 700 }, t, dt, 9);
+  const st = R.stat(t); text(nf(st.veh), x + 270, 1036, 60, FG, { w: 'bold', f: FD, a: 'center' }); text('cars on the road now', x + 270, 1066, 21, MUT, { a: 'center' });
+  text(st.spd.toFixed(0) + ' km/h', x + 270, 1128, 44, col, { w: 'bold', f: FD, a: 'center' }); text('average speed', x + 270, 1156, 21, MUT, { a: 'center' });
+  text('peak so far ' + nf(peakNow), x + 270, 1196, 24, AMB, { a: 'center' });
+}
+function playScene(sec) {
+  const t = clamp((sec - PLAY[0]) / (PLAY[1] - PLAY[0]), 0, 1) * TMAX; title(t);
+  panel(RA, 0, 'Everyone starts at 09:00', 'every office opens at the same time', ORG, t, 1 / FPS, peakSoFar(RA, t));
+  panel(RB, 540, 'Staggered starts', 'a quarter each at 08:30 · 09:00 · 09:30 · 10:00', TEAL, t, 1 / FPS, peakSoFar(RB, t));
+  g.fillStyle = LINE; g.fillRect(539, 232, 2, 1010);
+  const cap = t < 3600 ? 'Same people, same roads, same schools. Only office start times differ.' : t < 8400 ? 'School runs and early commuters begin to fill the roads.' : t < 11700 ? 'Red roads are over capacity. Watch the left side.' : 'The wave passes. The peak is what matters.';
+  wrap(cap, 54, 1266, W - 108, 27, FG, 34); legendRamp(W - 54 - 120, 1292, RC.slice(0, 5), 'empty', 'over capacity'); footnote();
+}
+function sumScene(sec) {
+  const a = clamp((sec - SUM[0]) / 0.6, 0, 1), b = clamp((sec - SUM[0] - 1.2) / 0.8, 0, 1), c = clamp((sec - SUM[0] - 2.6) / 0.8, 0, 1); g.globalAlpha = a;
+  text('Same city, same people.', W / 2, 330, 64, FG, { w: 'bold', f: FD, a: 'center' }); text('Different start times.', W / 2, 410, 64, AMB, { w: 'bold', f: FD, a: 'center' }); g.globalAlpha = 1;
+  const row = (y, lab, l, r, al) => { g.globalAlpha = al; text(lab, W / 2, y, 28, MUT, { a: 'center' }); text(l, W / 4 + 20, y + 100, 92, ORG, { w: 'bold', f: FD, a: 'center' }); text('→', W / 2, y + 90, 60, DIM, { a: 'center' }); text(r, 3 * W / 4 - 20, y + 100, 92, TEAL, { w: 'bold', f: FD, a: 'center' }); g.globalAlpha = 1; };
+  row(560, 'Peak cars on the road at once', nf(Math.round(PEAKA / 1000) * 1000), nf(Math.round(PEAKB / 1000) * 1000), b);
+  row(820, 'Slowest average speed', MINA.toFixed(0) + ' km/h', MINB.toFixed(0) + ' km/h', c);
+  g.globalAlpha = c; text('In this model, staggering cuts the peak by more than half.', W / 2, 1090, 30, FG, { a: 'center' }); text('The jam does not disappear: it moves earlier, into the school run.', W / 2, 1136, 26, MUT, { a: 'center' }); g.globalAlpha = 1; footnote();
+}
+function endScene(sec) {
+  const a = clamp((sec - END[0]) / 0.6, 0, 1); g.globalAlpha = a; text('Modelled, not measured', W / 2, 520, 74, FG, { w: 'bold', f: FD, a: 'center' });
+  text('An open traffic model of Tashkent’s morning commute', W / 2, 590, 34, AMB, { a: 'center' });
+  ['About 350,000 car trips, 06:00–10:00 · shortest-path routing with congestion', 'Signal delay 40 s and 45% of commuters driving are assumptions', 'Not yet calibrated against measured speeds'].forEach((s, i) => text(s, W / 2, 680 + i * 44, 26, MUT, { a: 'center' })); g.globalAlpha = 1;
+}
+function renderFrame(f) {
+  const sec = f / FPS; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = BG; g.fillRect(0, 0, W, H);
+  if (sec < PLAY[1]) playScene(sec); else if (sec < SUM[1]) sumScene(sec); else endScene(sec);
+  for (const j of [SUM[0], END[0]]) { const d = Math.abs(sec - j); if (d < 0.35) { g.fillStyle = `rgba(10,16,23,${(1 - d / 0.35) * 0.9})`; g.fillRect(0, 0, W, H); } }
+  if (sec > TOTAL - 0.4) { g.fillStyle = `rgba(10,16,23,${(sec - (TOTAL - 0.4)) / 0.4})`; g.fillRect(0, 0, W, H); }
+}
+window.renderFrame = renderFrame; window.TOTALF = Math.round(TOTAL * FPS);
+</script>
