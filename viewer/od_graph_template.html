@@ -57,7 +57,7 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
       <div class="opts"><label><input type="checkbox" id="oArc" checked> Flows</label><label><input type="checkbox" id="oGhost" checked> Starting size</label><label><input type="checkbox" id="oLab" checked> Names</label></div>
       <div class="zoom"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zrs" aria-label="Reset view" style="font-size:12px">⌂</button></div>
       <div id="tip" hidden></div>
-      <div class="ctl"><button id="play">Pause</button><input type="range" id="scrub" min="0" max="17999" value="0" step="1" aria-label="Time of day"><select id="spd" aria-label="Clock speed"><option value="120">120×</option><option value="300" selected>300×</option><option value="600">600×</option><option value="1200">1200×</option></select></div>
+      <div class="ctl"><button id="play">Pause</button><input type="range" id="scrub" min="0" max="17999" value="0" step="1" aria-label="Time of day"><select id="amp" aria-label="Exaggerate size change" title="Exaggerate how much circles grow or shrink"><option value="1">Size: true scale</option><option value="3" selected>Change ×3</option><option value="6">Change ×6</option></select><select id="spd" aria-label="Clock speed"><option value="120">120×</option><option value="300" selected>300×</option><option value="600">600×</option><option value="1200">1200×</option></select></div>
     </div>
     <aside>
       <div class="card"><div class="clock" id="clock">06:00</div><div class="slice" id="phase"></div></div>
@@ -67,7 +67,7 @@ h2 { font: 600 12px var(--body); letter-spacing: .08em; text-transform: uppercas
       <div class="card"><h2>How to read it</h2>
         <div class="ramp"><i style="background:#f0643c"></i><i style="background:#b9714f"></i><i style="background:#6d8299"></i><i style="background:#4fb39e"></i><i style="background:#3fd0b0"></i></div>
         <div class="ramp-l"><span>emptied</span><span>as at 06:00</span><span>filled</span></div>
-        <p class="note" style="margin:10px 0 0">Circle area follows the people in the area; the dashed ring is its size at 06:00. Arcs are people leaving in the current 15 minutes. <b>Model output.</b> Counts cover everyone who makes a modelled morning trip (work, school, college, university; every mode), not the whole population. Arrival times use car travel times for everybody, so walkers and bus riders arrive earlier here than in reality.</p>
+        <p class="note" style="margin:10px 0 0">Circle area follows the people in the area, with the change since 06:00 exaggerated ×3 (choose true scale in the bar below); the dashed ring is the true 06:00 size and the percentage is the real change. Arcs are people leaving in the current 15 minutes. <b>Model output.</b> Counts cover everyone who makes a modelled morning trip (work, school, college, university; every mode), not the whole population. Arrival times use car travel times for everybody, so walkers and bus riders arrive earlier here than in reality.</p>
       </div>
     </aside>
   </main>
@@ -85,14 +85,14 @@ const RINGS = D.rings.map(r => ({ d: r.d, p: r.p.map(([x, y]) => [x * COSL, -y])
 let bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9; RINGS.forEach(r => r.p.forEach(([x, y]) => { bx0 = Math.min(bx0, x); bx1 = Math.max(bx1, x); by0 = Math.min(by0, y); by1 = Math.max(by1, y); }));
 const wrap = $('wrap'), cv = $('cv'), g = cv.getContext('2d'); let W = 0, H = 0, DPR = 1, fit = 1; const view = { cx: (bx0 + bx1) / 2, cy: (by0 + by1) / 2, s: 1 };
 const sx = x => (x - view.cx) * view.s + W / 2, sy = y => (y - view.cy) * view.s + H / 2;
-const st = { t: 0, playing: true, speed: 300, lvl: 'dist', arcs: true, ghost: true, labels: true, hover: -1 };
+const st = { t: 0, playing: true, speed: 300, lvl: 'dist', arcs: true, ghost: true, labels: true, hover: -1, amp: 3 };
 function resize() { DPR = Math.min(devicePixelRatio || 1, 2); const r = wrap.getBoundingClientRect(); W = r.width; H = r.height; cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); const f = Math.min(W / (bx1 - bx0), H / (by1 - by0)) * 0.92; if (view.s === 1 || Math.abs(view.s / fit - 1) < 1e-6) view.s = f; fit = f; }
 const lerp = (a, b, w) => a + (b - a) * w;
 let PR = new Float32Array(0), CUR = null;
 function presentAt(l, t) { const p = Math.min(NB - 1e-6, t / (BIN * 60)), i = Math.floor(p), w = p - i, a = l.pres[i], b = l.pres[i + 1]; if (PR.length < l.n) PR = new Float32Array(l.n); for (let k = 0; k < l.n; k++) PR[k] = lerp(a[k], b[k], w); return PR; }
 const pad = n => String(n).padStart(2, '0'), fmt = t => { const m = Math.floor(t / 60) + 360; return pad(Math.floor(m / 60) % 24) + ':' + pad(m % 60); }, nf = n => Math.round(n).toLocaleString('en-US');
 function color(ratio) { const v = Math.max(-1, Math.min(1, Math.log2(Math.max(ratio, 0.01)) / 1.6)); if (v < 0) { const k = -v; return `rgb(${Math.round(lerp(109, 240, k))},${Math.round(lerp(130, 100, k))},${Math.round(lerp(153, 60, k))})`; } return `rgb(${Math.round(lerp(109, 63, v))},${Math.round(lerp(130, 208, v))},${Math.round(lerp(153, 176, v))})`; }
-const rad = (l, v) => Math.max(l.rmin, l.rmax * Math.sqrt(v / l.max)) * Math.min(2.2, Math.max(0.8, Math.pow(view.s / fit, 0.35)));
+const rad = (l, v, k) => { let e = v; if (st.amp !== 1 && k !== undefined && l.base[k] > 5) { const r = v / l.base[k]; e = l.base[k] * Math.max(0.03, 1 + (r - 1) * st.amp); } return Math.min(l.rmax * 1.7, Math.max(l.rmin, l.rmax * Math.sqrt(e / l.max))) * Math.min(2.2, Math.max(0.8, Math.pow(view.s / fit, 0.35))); };
 function arcPts(x0, y0, x1, y1) { const mx = (x0 + x1) / 2, my = (y0 + y1) / 2, dx = x1 - x0, dy = y1 - y0, c = 0.18; return [mx - dy * c, my + dx * c]; }
 function flowsNow(l) {
   const s = Math.floor(st.t / 900); if (s >= D.ns) return [];
@@ -113,11 +113,11 @@ function draw(now) {
       for (let q = 0; q < nd; q++) { const u = ((now / 1000) * 0.35 + q / nd + (i * 7 + j * 13) % 10 / 10) % 1, a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u; g.beginPath(); g.arc(a * x0 + b * cx + c * x1, a * y0 + b * cy + c * y1, (st.lvl === 'dist' ? 2.2 : 1.3) * zs, 0, 6.2832); g.fill(); }
     }
   }
-  if (st.ghost) { g.setLineDash([3, 3]); g.strokeStyle = 'rgba(217,228,238,0.35)'; g.lineWidth = 1; for (let k = 0; k < l.n; k++) { if (l.base[k] <= 0) continue; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), rad(l, l.base[k]), 0, 6.2832); g.stroke(); } g.setLineDash([]); }
+  if (st.ghost) { g.setLineDash([3, 3]); g.strokeStyle = 'rgba(217,228,238,0.35)'; g.lineWidth = 1; for (let k = 0; k < l.n; k++) { if (l.base[k] <= 0) continue; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), rad(l, l.base[k], k), 0, 6.2832); g.stroke(); } g.setLineDash([]); }
   const order = Array.from({ length: l.n }, (_, k) => k).sort((a, b) => pr[b] - pr[a]);
-  for (const k of order) { const r = rad(l, pr[k]), ratio = l.base[k] > 5 ? pr[k] / l.base[k] : (pr[k] > 5 ? 8 : 1); g.fillStyle = color(ratio); g.globalAlpha = 0.82; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), r, 0, 6.2832); g.fill(); g.globalAlpha = 1; if (k === st.hover) { g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.stroke(); } }
-  if (st.labels && st.lvl === 'dist') { g.font = '600 11px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#d9e4ee'; for (let k = 0; k < l.n; k++) g.fillText(l.name[k], sx(l.wx[k]), sy(l.wy[k]) - rad(l, pr[k]) - 5); }
-  if (st.labels && st.lvl === 'mah' && view.s / fit > 4) { g.font = '10px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#8499ac'; for (let k = 0; k < l.n; k++) { const x = sx(l.wx[k]), y = sy(l.wy[k]); if (x > 0 && y > 0 && x < W && y < H && pr[k] > 800) g.fillText(l.name[k], x, y - rad(l, pr[k]) - 3); } }
+  for (const k of order) { const r = rad(l, pr[k], k), ratio = l.base[k] > 5 ? pr[k] / l.base[k] : (pr[k] > 5 ? 8 : 1); g.fillStyle = color(ratio); g.globalAlpha = 0.82; g.beginPath(); g.arc(sx(l.wx[k]), sy(l.wy[k]), r, 0, 6.2832); g.fill(); g.globalAlpha = 1; if (k === st.hover) { g.strokeStyle = '#fff'; g.lineWidth = 1.5; g.stroke(); } }
+  if (st.labels && st.lvl === 'dist') { g.font = '600 11px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#d9e4ee'; for (let k = 0; k < l.n; k++) { const ch = l.base[k] > 5 ? Math.round((pr[k] / l.base[k] - 1) * 100) : 0; g.fillStyle = '#d9e4ee'; g.fillText(l.name[k], sx(l.wx[k]), sy(l.wy[k]) - rad(l, pr[k], k) - 5); g.fillStyle = ch > 0 ? '#3fd0b0' : ch < 0 ? '#f0643c' : '#8499ac'; g.fillText((ch > 0 ? '+' : ch < 0 ? '−' : '') + Math.abs(ch) + '%', sx(l.wx[k]), sy(l.wy[k]) + 4); } }
+  if (st.labels && st.lvl === 'mah' && view.s / fit > 4) { g.font = '10px "IBM Plex Sans", sans-serif'; g.textAlign = 'center'; g.fillStyle = '#8499ac'; for (let k = 0; k < l.n; k++) { const x = sx(l.wx[k]), y = sy(l.wy[k]); if (x > 0 && y > 0 && x < W && y < H && pr[k] > 800) g.fillText(l.name[k], x, y - rad(l, pr[k], k) - 3); } }
   readout(l, pr);
 }
 let lastR = -1;
@@ -151,7 +151,7 @@ let last = performance.now();
 function frame(now) { const dt = Math.min(0.1, (now - last) / 1000); last = now; if (st.playing) { st.t += dt * st.speed; if (st.t >= TMAX - 1) st.t = 0; } draw(now); drawTL(); requestAnimationFrame(frame); }
 // controls
 $('play').onclick = () => { st.playing = !st.playing; $('play').textContent = st.playing ? 'Pause' : 'Play'; };
-$('scrub').oninput = e => { st.t = +e.target.value; }; $('spd').onchange = e => { st.speed = +e.target.value; };
+$('scrub').oninput = e => { st.t = +e.target.value; }; $('spd').onchange = e => { st.speed = +e.target.value; }; $('amp').onchange = e => { st.amp = +e.target.value; };
 const setLvl = k => { st.lvl = k; st.hover = -1; lastR = -1; $('bD').setAttribute('aria-pressed', k === 'dist'); $('bM').setAttribute('aria-pressed', k === 'mah'); $('tip').hidden = true; };
 $('bD').onclick = () => setLvl('dist'); $('bM').onclick = () => setLvl('mah');
 [['oArc', 'arcs'], ['oGhost', 'ghost'], ['oLab', 'labels']].forEach(([id, k]) => $(id).onchange = e => { st[k] = e.target.checked; });
@@ -163,7 +163,7 @@ wrap.addEventListener('pointerdown', e => { if (e.target.closest('.ctl,.zoom,.se
 wrap.addEventListener('pointermove', e => {
   if (ptr.has(e.pointerId)) { const p = ptr.get(e.pointerId); if (ptr.size === 1) { view.cx -= (e.clientX - p[0]) / view.s; view.cy -= (e.clientY - p[1]) / view.s; } ptr.set(e.pointerId, [e.clientX, e.clientY]); if (ptr.size === 2) { const [a, b] = [...ptr.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]), r = wrap.getBoundingClientRect(); if (pd0) zoomAt(d / pd0, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top); pd0 = d; } return; }
   const r = wrap.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top, l = L[st.lvl], pr = presentAt(l, st.t); let best = -1, bd = 1e9;
-  for (let k = 0; k < l.n; k++) { const d = Math.hypot(sx(l.wx[k]) - mx, sy(l.wy[k]) - my); if (d < Math.max(rad(l, pr[k]), 6) && d < bd) { bd = d; best = k; } }
+  for (let k = 0; k < l.n; k++) { const d = Math.hypot(sx(l.wx[k]) - mx, sy(l.wy[k]) - my); if (d < Math.max(rad(l, pr[k], k), 6) && d < bd) { bd = d; best = k; } }
   st.hover = best; const tip = $('tip');
   if (best < 0) tip.hidden = true; else { const dv = pr[best] - l.base[best]; tip.hidden = false; tip.innerHTML = `<b>${l.name[best]}</b>${st.lvl === 'mah' ? ' · ' + (NAMES[l.d[best]] || '') : ''}<br>now <span class="m">${nf(pr[best])}</span> · at 06:00 <span class="m">${nf(l.base[best])}</span><br>change <span class="m" style="color:${dv >= 0 ? 'var(--gain)' : 'var(--lose)'}">${dv >= 0 ? '+' : '−'}${nf(Math.abs(dv))}</span>`; tip.style.left = Math.min(mx + 14, W - 190) + 'px'; tip.style.top = Math.max(8, my - 10) + 'px'; }
 });
