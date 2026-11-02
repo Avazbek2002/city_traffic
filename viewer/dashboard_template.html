@@ -23,7 +23,7 @@
 }
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--fg); font: 14px/1.45 var(--body); margin: 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px; box-sizing: border-box; }
-.app { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; gap: 10px; height: 100%; min-height: 0; }
+.app { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; gap: 10px; height: 100%; min-height: 0; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
 h1 { font: 600 26px/1 var(--display); letter-spacing: .02em; text-transform: uppercase; margin: 0; text-wrap: balance; }
 .hl { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; }
@@ -64,6 +64,8 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
 #play { width: 72px; } input[type=range] { flex: 1 1 200px; min-width: 160px; accent-color: var(--amber); }
 #tl { flex: 1 1 100%; height: 44px; display: block; cursor: pointer; }
 .note { color: var(--dim); font-size: 11px; }
+.foot { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 16px; padding: 2px 0 10px; color: var(--muted); font-size: 12px; text-align: center; }
+.foot a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; } .foot a:hover { text-decoration-color: var(--fg); } .foot .sep { color: var(--dim); }
 @media (max-width: 900px) {
   html, body { height: auto; } .app { height: auto; display: flex; flex-direction: column; }
   #wins { display: flex; flex-direction: column; gap: 10px; } .win { height: 68vh; min-height: 380px; } .div { display: none !important; }
@@ -122,6 +124,11 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
     <select id="spd" aria-label="Clock speed"><option value="60">60×</option><option value="120">120×</option><option value="300" selected>300×</option><option value="600">600×</option></select>
     <canvas id="tl" aria-label="Vehicles on the road and people on the move over time"></canvas>
   </div>
+  <footer class="foot">
+    <span>Built by <b>Avazbek Isroilov</b> · for data-driven projects, get in touch:</span>
+    <span><a href="https://t.me/aisroilov2002" target="_blank" rel="noopener">Telegram @aisroilov2002</a> <span class="sep">·</span> <a href="https://www.linkedin.com/in/avazbeki/" target="_blank" rel="noopener">LinkedIn</a></span>
+    <span class="note">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap contributors</a></span>
+  </footer>
 </div>
 <script>
 const D = __DATA__, TR = __TRIPS__, G = __GRAPH__;
