@@ -113,7 +113,7 @@ function roadsBlock(R, y, label, sub, col, t) {
   blockHead(y, label, sub, col); roadsDraw2(R, { x: 0, y: y + 74, w: W, h: MAPH }, t, 1 / FPS);
   const st = R.stat(t); statCols(y + 74 + MAPH + 6, [[nf(st.veh), 'cars on the road now'], [st.spd.toFixed(0) + ' km/h', 'average speed'], [nf(peakSoFar(R, t)), 'peak so far']]);
 }
-const LA = ['Everyone starts at 09:00', 'every office opens at the same time', ORG], LB = ['Staggered starts', 'a quarter each at 08:30 · 09:00 · 09:30 · 10:00', TEAL];
+const LA = ['Everyone starts at 09:00', 'every office opens at the same time', ORG], LB = ['Spread-out start times', 'a quarter of staff each at 08:30 · 09:00 · 09:30 · 10:00', TEAL];
 function roadsScene(sec) {
   const t = clamp((sec - P1[0]) / (P1[1] - P1[0]), 0, 1) * TMAX; title(t, 'Tashkent roads, a weekday morning, simulated');
   roadsBlock(RA, BY[0], ...LA, t); roadsBlock(RB, BY[1], ...LB, t); g.fillStyle = LINE; g.fillRect(54, BY[1] - 8, W - 108, 2);
@@ -133,12 +133,12 @@ function sumScene(sec) {
   const row = (y, lab, l, r, al) => { g.globalAlpha = al; text(lab, W / 2, y, 28, MUT, { a: 'center' }); text(l, W / 4 + 20, y + 100, 92, ORG, { w: 'bold', f: FD, a: 'center' }); text('→', W / 2, y + 90, 60, DIM, { a: 'center' }); text(r, 3 * W / 4 - 20, y + 100, 92, TEAL, { w: 'bold', f: FD, a: 'center' }); g.globalAlpha = 1; };
   row(620, 'Peak cars on the road at once', nf(Math.round(PEAKA / 1000) * 1000), nf(Math.round(PEAKB / 1000) * 1000), c1);
   row(930, 'Slowest average speed', MINA.toFixed(0) + ' km/h', MINB.toFixed(0) + ' km/h', c2);
-  g.globalAlpha = c3; text('In this model, staggering cuts the car peak by more than half.', W / 2, 1300, 32, FG, { a: 'center' }); text('The jam does not disappear: it moves earlier, into the school run.', W / 2, 1350, 27, MUT, { a: 'center' }); g.globalAlpha = 1; footnote();
+  g.globalAlpha = c3; text('In this model, spreading out start times cuts the car peak by more than half.', W / 2, 1300, 28, FG, { a: 'center' }); text('The jam does not disappear: it moves earlier, into the school run.', W / 2, 1350, 27, MUT, { a: 'center' }); g.globalAlpha = 1; footnote();
 }
 function endScene(sec) {
   const a = clamp((sec - END[0]) / 0.6, 0, 1); g.globalAlpha = a; text('Modelled, not measured', W / 2, 800, 74, FG, { w: 'bold', f: FD, a: 'center' });
   text('An open traffic model of Tashkent’s morning commute', W / 2, 870, 34, AMB, { a: 'center' });
-  ['About 350,000 car trips, 06:00–10:00 · shortest-path routing with congestion', 'Signal delay 40 s and 45% of commuters driving are assumptions', 'Not yet calibrated against measured speeds'].forEach((s, i) => text(s, W / 2, 960 + i * 44, 26, MUT, { a: 'center' })); g.globalAlpha = 1;
+  ['About 350,000 car trips, 06:00–10:00 · shortest-path routing with congestion', 'Signal delay 40 s and 45% of commuters driving are assumptions', 'Not yet checked against real traffic data'].forEach((s, i) => text(s, W / 2, 960 + i * 44, 26, MUT, { a: 'center' })); g.globalAlpha = 1;
 }
 function renderFrame(f) {
   const sec = f / FPS, now = sec * 1000; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = BG; g.fillRect(0, 0, W, H);
