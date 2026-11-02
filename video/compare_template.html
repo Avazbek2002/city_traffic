@@ -3,7 +3,7 @@
 <canvas id="c" width="1080" height="1920"></canvas>
 <script>
 // Deterministic frame renderer: window.renderFrame(f) draws frame f (0-based, call in order) on a 1080x1920 canvas. Scenes: roads side by side (stacked), mahalla graphs, summary, end card.
-const DA = __DATA_A__, DB = __DATA_B__, GA = __GRAPH_A__, GB = __GRAPH_B__;
+const DA = __DATA_A__, DB = __DATA_B__, GR = __GRAPH__;
 const W = 1080, H = 1920, FPS = 30, COSL = Math.cos(41.3 * Math.PI / 180), BG = '#0a1017', LINE = '#1f2f40', FG = '#d9e4ee', MUT = '#8499ac', DIM = '#4d6277', AMB = '#f2b64c', TEAL = '#3fd0b0', ORG = '#f0643c';
 const FD = '"Liberation Sans Narrow","DejaVu Sans Condensed",Arial,sans-serif', FB = '"Liberation Sans",Arial,sans-serif', FM = '"DejaVu Sans Mono",monospace';
 const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
@@ -95,28 +95,23 @@ function graphDraw(l, G, rect, t, now, amp = 3) {
 }
 
 // ---------------------------------------------------------------- scenes
-const RA = roadsSet(DA), RB = roadsSet(DB), MA = graphSet(GA, 'mah'), MB = graphSet(GB, 'mah');
-for (const l of [MA, MB]) { const xs = [...l.wx].sort((a, b) => a - b), ys = [...l.wy].sort((a, b) => a - b), q = (a, p) => a[Math.floor(p * (a.length - 1))], px = (q(xs, 0.98) - q(xs, 0.02)) * 0.05, py = (q(ys, 0.98) - q(ys, 0.02)) * 0.05; l.b = { x0: q(xs, 0.02) - px, x1: q(xs, 0.98) + px, y0: q(ys, 0.02) - py, y1: q(ys, 0.98) + py }; }   // zoom on the populated core
+const RA = roadsSet(DA), RB = roadsSet(DB), GM = graphSet(GR, 'mah');
+for (const l of [GM]) { const xs = [...l.wx].sort((a, b) => a - b), ys = [...l.wy].sort((a, b) => a - b), q = (a, p) => a[Math.floor(p * (a.length - 1))], px = (q(xs, 0.99) - q(xs, 0.01)) * 0.1, py = (q(ys, 0.99) - q(ys, 0.01)) * 0.06; l.b = { x0: q(xs, 0.01) - px, x1: q(xs, 0.99) + px, y0: q(ys, 0.01) - py, y1: q(ys, 0.99) + py }; }   // zoom on the populated core
 const P1 = [0.8, 13.8], P2 = [13.8, 27.8], SUM = [27.8, 33.3], END = [33.3, 36.8], TOTAL = END[1], TMAX = 14400, TG = 16200;
 const PEAKA = Math.max(...DA.stats.map(s => s.veh_on_network)), PEAKB = Math.max(...DB.stats.map(s => s.veh_on_network));
 const MINA = Math.min(...DA.stats.map(s => s.avg_speed_kmh)), MINB = Math.min(...DB.stats.map(s => s.avg_speed_kmh));
-const MOVA = Math.max(...GA.transit), MOVB = Math.max(...GB.transit);
 const peakSoFar = (R, t) => { let m = 0; for (let u = 0; u <= t; u += 300) m = Math.max(m, R.stat(u).veh); return Math.max(m, R.stat(t).veh); };
 const movAt = (G, t) => { const p = Math.min(G.nb - 1e-6, t / (G.bin * 60)), i = Math.floor(p), w = p - i; return lerp(G.transit[i], G.transit[i + 1], w); };
 const movPeak = (G, t) => { let m = 0; for (let u = 0; u <= t; u += 300) m = Math.max(m, movAt(G, u)); return Math.max(m, movAt(G, t)); };
 function legendRamp(x, y, cols, l, r) { const W_ = 230, w = W_ / cols.length; x -= W_ - 120; cols.forEach((c, i) => { g.fillStyle = c; g.fillRect(x + i * w, y, w, 8); }); text(l, x, y + 28, 18, MUT); text(r, x + W_, y + 28, 18, MUT, { a: 'right' }); }
 function footnote() { text('Model output — not measured traffic', 54, H - 16, 20, DIM); }
-function title(t, sub) { text('Same city, different start times', 54, 84, 40, FG, { w: 'bold', f: FD }); text(sub, 56, 124, 24, MUT); text(clock(t), W - 54, 124, 84, AMB, { w: 'bold', f: FD, a: 'right' }); }
+function title(t, sub, main = 'Same city, different start times') { text(main, 54, 84, 40, FG, { w: 'bold', f: FD }); text(sub, 56, 124, 24, MUT); text(clock(t), W - 54, 124, 84, AMB, { w: 'bold', f: FD, a: 'right' }); }
 const BY = [165, 965], MAPH = 630;
 function blockHead(y, label, sub, col) { text(label, 54, y + 36, 38, col, { w: 'bold', f: FD }); text(sub, 56, y + 64, 21, MUT); }
 function statCols(y, cols, col) { cols.forEach((c, i) => { const x = 180 + i * 360; text(c[0], x, y + 38, 54, i === 2 ? AMB : FG, { w: 'bold', f: FD, a: 'center' }); text(c[1], x, y + 66, 21, MUT, { a: 'center' }); }); }
 function roadsBlock(R, y, label, sub, col, t) {
   blockHead(y, label, sub, col); roadsDraw2(R, { x: 0, y: y + 74, w: W, h: MAPH }, t, 1 / FPS);
   const st = R.stat(t); statCols(y + 74 + MAPH + 6, [[nf(st.veh), 'cars on the road now'], [st.spd.toFixed(0) + ' km/h', 'average speed'], [nf(peakSoFar(R, t)), 'peak so far']]);
-}
-function graphBlock(l, G, y, label, sub, col, t, now) {
-  blockHead(y, label, sub, col); const r = graphDraw(l, G, { x: 0, y: y + 74, w: W, h: MAPH }, t, now);
-  statCols(y + 74 + MAPH + 6, [[nf(r.mov), 'people on the move'], [nf(r.arrived), 'arrived at work or school'], [nf(movPeak(G, t)), 'peak on the move']]);
 }
 const LA = ['Everyone starts at 09:00', 'every office opens at the same time', ORG], LB = ['Staggered starts', 'a quarter each at 08:30 · 09:00 · 09:30 · 10:00', TEAL];
 function roadsScene(sec) {
@@ -126,9 +121,10 @@ function roadsScene(sec) {
   wrap(cap, 54, 1812, W - 108, 27, FG, 34); legendRamp(W - 54 - 120, 1850, RC.slice(0, 5), 'empty', 'over capacity'); footnote();
 }
 function graphScene(sec, now) {
-  const s = sec - P2[0], t = clamp(s / 13.5, 0, 1) * TG; title(t, 'Neighbourhoods (mahallas) over the morning');
-  graphBlock(MA, GA, BY[0], ...LA, t, now); graphBlock(MB, GB, BY[1], ...LB, t, now); g.fillStyle = LINE; g.fillRect(54, BY[1] - 8, W - 108, 2);
-  wrap(s < 4.5 ? 'Each circle is a neighbourhood. It shrinks as people leave for work and school…' : s < 9 ? '…and grows where they arrive. Teal is filling up, orange is emptying (change exaggerated ×3).' : 'Top: everyone leaves at once. Bottom: the same people leave in waves.', 54, 1812, W - 108, 27, FG, 34);
+  const s = sec - P2[0], t = clamp(s / 13.5, 0, 1) * TG; title(t, 'Neighbourhoods (mahallas) over the morning', 'Where people go');
+  const r = graphDraw(GM, GR, { x: 0, y: 180, w: W, h: 1180 }, t, now);
+  [[nf(r.mov), 'people on the move', FG], [nf(r.arrived), 'arrived at work or school', FG]].forEach((c, i) => { const x = 270 + i * 540; text(c[0], x, 1440, 66, c[2], { w: 'bold', f: FD, a: 'center' }); text(c[1], x, 1474, 24, MUT, { a: 'center' }); });
+  wrap(s < 4.5 ? 'Each circle is a neighbourhood. It shrinks as people leave for work and school…' : s < 9 ? '…and grows where they arrive. Teal is filling up, orange is emptying (change exaggerated ×3).' : 'At the peak, more than 200,000 people were on the move at once.', 54, 1590, W - 108, 30, FG, 38);
   legendRamp(W - 54 - 120, 1850, ['#f0643c', '#b9714f', '#6d8299', '#4fb39e', '#3fd0b0'], 'emptied', 'filled'); footnote();
 }
 function sumScene(sec) {
