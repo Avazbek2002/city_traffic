@@ -1,0 +1,2132 @@
+{
+ "street": "mahtum|makhtum|махтум",
+ "centre": [
+  41.307206,
+  69.302682
+ ],
+ "radius_m": 1500,
+ "bearing_deg": 283.1,
+ "slice": 11,
+ "clock": "08:45",
+ "scenario": "base",
+ "car_share_work": 0.45,
+ "cars_on_stretch": 317.5,
+ "scale": 1.026,
+ "series": [
+  {
+   "slice": 0,
+   "clock": "06:00",
+   "cars_on_stretch": 24.5,
+   "cars_forward": 12.4,
+   "cars_reverse": 12.1,
+   "flow_forward_vph": 48.0,
+   "flow_reverse_vph": 141.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 1,
+   "clock": "06:15",
+   "cars_on_stretch": 24.5,
+   "cars_forward": 12.4,
+   "cars_reverse": 12.2,
+   "flow_forward_vph": 48.0,
+   "flow_reverse_vph": 141.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 2,
+   "clock": "06:30",
+   "cars_on_stretch": 69.9,
+   "cars_forward": 36.3,
+   "cars_reverse": 33.6,
+   "flow_forward_vph": 150.0,
+   "flow_reverse_vph": 358.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 3,
+   "clock": "06:45",
+   "cars_on_stretch": 110.6,
+   "cars_forward": 56.9,
+   "cars_reverse": 53.7,
+   "flow_forward_vph": 265.0,
+   "flow_reverse_vph": 563.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 4,
+   "clock": "07:00",
+   "cars_on_stretch": 60.0,
+   "cars_forward": 32.3,
+   "cars_reverse": 27.7,
+   "flow_forward_vph": 136.0,
+   "flow_reverse_vph": 273.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 5,
+   "clock": "07:15",
+   "cars_on_stretch": 89.8,
+   "cars_forward": 47.8,
+   "cars_reverse": 42.0,
+   "flow_forward_vph": 213.0,
+   "flow_reverse_vph": 407.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 6,
+   "clock": "07:30",
+   "cars_on_stretch": 116.4,
+   "cars_forward": 61.1,
+   "cars_reverse": 55.3,
+   "flow_forward_vph": 301.0,
+   "flow_reverse_vph": 546.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 7,
+   "clock": "07:45",
+   "cars_on_stretch": 158.3,
+   "cars_forward": 82.7,
+   "cars_reverse": 75.6,
+   "flow_forward_vph": 470.0,
+   "flow_reverse_vph": 775.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 8,
+   "clock": "08:00",
+   "cars_on_stretch": 182.7,
+   "cars_forward": 91.6,
+   "cars_reverse": 91.1,
+   "flow_forward_vph": 532.0,
+   "flow_reverse_vph": 967.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 9,
+   "clock": "08:15",
+   "cars_on_stretch": 239.5,
+   "cars_forward": 120.6,
+   "cars_reverse": 119.0,
+   "flow_forward_vph": 834.0,
+   "flow_reverse_vph": 1232.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 10,
+   "clock": "08:30",
+   "cars_on_stretch": 254.8,
+   "cars_forward": 127.9,
+   "cars_reverse": 127.0,
+   "flow_forward_vph": 931.0,
+   "flow_reverse_vph": 1198.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 11,
+   "clock": "08:45",
+   "cars_on_stretch": 317.5,
+   "cars_forward": 150.4,
+   "cars_reverse": 167.1,
+   "flow_forward_vph": 1058.0,
+   "flow_reverse_vph": 1579.0,
+   "speed_kmh": 19.6
+  },
+  {
+   "slice": 12,
+   "clock": "09:00",
+   "cars_on_stretch": 150.4,
+   "cars_forward": 77.2,
+   "cars_reverse": 73.2,
+   "flow_forward_vph": 436.0,
+   "flow_reverse_vph": 799.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 13,
+   "clock": "09:15",
+   "cars_on_stretch": 126.9,
+   "cars_forward": 64.3,
+   "cars_reverse": 62.5,
+   "flow_forward_vph": 309.0,
+   "flow_reverse_vph": 665.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 14,
+   "clock": "09:30",
+   "cars_on_stretch": 88.3,
+   "cars_forward": 45.9,
+   "cars_reverse": 42.4,
+   "flow_forward_vph": 200.0,
+   "flow_reverse_vph": 443.0,
+   "speed_kmh": 19.7
+  },
+  {
+   "slice": 15,
+   "clock": "09:45",
+   "cars_on_stretch": 67.6,
+   "cars_forward": 35.6,
+   "cars_reverse": 32.0,
+   "flow_forward_vph": 144.0,
+   "flow_reverse_vph": 331.0,
+   "speed_kmh": 19.7
+  }
+ ],
+ "od": [
+  {
+   "vph": 1025.5,
+   "src": {
+    "kind": "side_road",
+    "node": 39225,
+    "lon": 69.298671,
+    "lat": 41.307344,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 61.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 8959,
+    "lon": 69.30526,
+    "lat": 41.30601,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 137.2
+   }
+  },
+  {
+   "vph": 954.7,
+   "src": {
+    "kind": "side_road",
+    "node": 42616,
+    "lon": 69.300505,
+    "lat": 41.307456,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 2.0,
+    "bearing": 82.2
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 817.5,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 73762,
+    "lon": 69.300882,
+    "lat": 41.307537,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 2.0,
+    "bearing": 295.4
+   }
+  },
+  {
+   "vph": 730.8,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 18024,
+    "lon": 69.298933,
+    "lat": 41.307565,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 263.7
+   }
+  },
+  {
+   "vph": 693.3,
+   "src": {
+    "kind": "side_road",
+    "node": 42616,
+    "lon": 69.300505,
+    "lat": 41.307456,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 2.0,
+    "bearing": 82.2
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 8959,
+    "lon": 69.30526,
+    "lat": 41.30601,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 137.2
+   }
+  },
+  {
+   "vph": 422.6,
+   "src": {
+    "kind": "side_road",
+    "node": 39225,
+    "lon": 69.298671,
+    "lat": 41.307344,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 61.3
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 411.5,
+   "src": {
+    "kind": "side_road",
+    "node": 42616,
+    "lon": 69.300505,
+    "lat": 41.307456,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 2.0,
+    "bearing": 82.2
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 52.3
+   }
+  },
+  {
+   "vph": 340.3,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 73762,
+    "lon": 69.300882,
+    "lat": 41.307537,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 2.0,
+    "bearing": 295.4
+   }
+  },
+  {
+   "vph": 258.7,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 18024,
+    "lon": 69.298933,
+    "lat": 41.307565,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 263.7
+   }
+  },
+  {
+   "vph": 255.1,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 73762,
+    "lon": 69.300882,
+    "lat": 41.307537,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 2.0,
+    "bearing": 295.4
+   }
+  },
+  {
+   "vph": 225.8,
+   "src": {
+    "kind": "side_road",
+    "node": 21551,
+    "lon": 69.297533,
+    "lat": 41.307291,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 224.4
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   }
+  },
+  {
+   "vph": 144.0,
+   "src": {
+    "kind": "side_road",
+    "node": 79194,
+    "lon": 69.292281,
+    "lat": 41.307624,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 27.5
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   }
+  },
+  {
+   "vph": 115.7,
+   "src": {
+    "kind": "side_road",
+    "node": 39225,
+    "lon": 69.298671,
+    "lat": 41.307344,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 61.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 52.3
+   }
+  },
+  {
+   "vph": 96.3,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   }
+  },
+  {
+   "vph": 84.5,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   }
+  },
+  {
+   "vph": 82.8,
+   "src": {
+    "kind": "side_road",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 68.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sodiq Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 208.0
+   }
+  },
+  {
+   "vph": 73.0,
+   "src": {
+    "kind": "side_road",
+    "node": 83095,
+    "lon": 69.299436,
+    "lat": 41.30764,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 3.0,
+    "bearing": 231.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   }
+  },
+  {
+   "vph": 70.0,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 9519,
+    "lon": 69.286275,
+    "lat": 41.309378,
+    "road": "Shahrisabz ko'chasi",
+    "road_names": [
+     "Shahrisabz ko'chasi",
+     "Шахрисабз улица",
+     "Shahrisabz ko'chasi",
+     "Shahrisabz Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 203.3
+   }
+  },
+  {
+   "vph": 53.6,
+   "src": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 21552,
+    "lon": 69.297589,
+    "lat": 41.30715,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 86.5
+   }
+  },
+  {
+   "vph": 42.4,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 67815,
+    "lon": 69.308073,
+    "lat": 41.305045,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 1.0,
+    "bearing": 302.9
+   }
+  },
+  {
+   "vph": 36.8,
+   "src": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 29150,
+    "lon": 69.292159,
+    "lat": 41.307448,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 27.5
+   }
+  },
+  {
+   "vph": 35.4,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 79194,
+    "lon": 69.292281,
+    "lat": 41.307624,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 4.3
+   }
+  },
+  {
+   "vph": 33.4,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 18024,
+    "lon": 69.298933,
+    "lat": 41.307565,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 263.7
+   }
+  },
+  {
+   "vph": 32.4,
+   "src": {
+    "kind": "side_road",
+    "node": 45445,
+    "lon": 69.288879,
+    "lat": 41.308371,
+    "road": "Yaxyo Gulomov ko'chasi",
+    "road_names": [
+     "Yaxyo Gulomov ko'chasi",
+     "Яхе Гулямова улица",
+     "Yaxe Gulomov Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 27.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sodiq Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 208.0
+   }
+  },
+  {
+   "vph": 30.7,
+   "src": {
+    "kind": "side_road",
+    "node": 83095,
+    "lon": 69.299436,
+    "lat": 41.30764,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 3.0,
+    "bearing": 231.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 18024,
+    "lon": 69.298933,
+    "lat": 41.307565,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 4.0,
+    "bearing": 263.7
+   }
+  },
+  {
+   "vph": 25.2,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 9519,
+    "lon": 69.286275,
+    "lat": 41.309378,
+    "road": "Shahrisabz ko'chasi",
+    "road_names": [
+     "Shahrisabz ko'chasi",
+     "Шахрисабз улица",
+     "Shahrisabz ko'chasi",
+     "Shahrisabz Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 203.3
+   }
+  },
+  {
+   "vph": 24.9,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   }
+  },
+  {
+   "vph": 23.0,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 79194,
+    "lon": 69.292281,
+    "lat": 41.307624,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 4.3
+   }
+  },
+  {
+   "vph": 22.8,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 20.2,
+   "src": {
+    "kind": "side_road",
+    "node": 29150,
+    "lon": 69.292159,
+    "lat": 41.307448,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 36.3
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 17.3,
+   "src": {
+    "kind": "side_road",
+    "node": 29150,
+    "lon": 69.292159,
+    "lat": 41.307448,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 36.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 8959,
+    "lon": 69.30526,
+    "lat": 41.30601,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 137.2
+   }
+  },
+  {
+   "vph": 17.0,
+   "src": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 8959,
+    "lon": 69.30526,
+    "lat": 41.30601,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 137.2
+   }
+  },
+  {
+   "vph": 17.0,
+   "src": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 13.6,
+   "src": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 185.7
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 13.6,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 9519,
+    "lon": 69.286275,
+    "lat": 41.309378,
+    "road": "Shahrisabz ko'chasi",
+    "road_names": [
+     "Shahrisabz ko'chasi",
+     "Шахрисабз улица",
+     "Shahrisabz ko'chasi",
+     "Shahrisabz Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 203.3
+   }
+  },
+  {
+   "vph": 11.7,
+   "src": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 207.5
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 52.3
+   }
+  },
+  {
+   "vph": 10.2,
+   "src": {
+    "kind": "side_road",
+    "node": 44615,
+    "lon": 69.292144,
+    "lat": 41.307684,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 185.7
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 9519,
+    "lon": 69.286275,
+    "lat": 41.309378,
+    "road": "Shahrisabz ko'chasi",
+    "road_names": [
+     "Shahrisabz ko'chasi",
+     "Шахрисабз улица",
+     "Shahrisabz ko'chasi",
+     "Shahrisabz Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 203.3
+   }
+  },
+  {
+   "vph": 9.3,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 8.8,
+   "src": {
+    "kind": "side_road",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 68.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 8959,
+    "lon": 69.30526,
+    "lat": 41.30601,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 137.2
+   }
+  },
+  {
+   "vph": 8.8,
+   "src": {
+    "kind": "side_road",
+    "node": 29150,
+    "lon": 69.292159,
+    "lat": 41.307448,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 36.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 52.3
+   }
+  },
+  {
+   "vph": 8.4,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 15.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi",
+     "Истиклол улица",
+     "Istiqlol Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 7.1
+   }
+  },
+  {
+   "vph": 8.0,
+   "src": {
+    "kind": "side_road",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 68.3
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 7.7,
+   "src": {
+    "kind": "street_end",
+    "node": 82279,
+    "lon": 69.319882,
+    "lat": 41.304131,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 256.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi",
+     "Истиклол улица",
+     "Istiqlol Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 7.1
+   }
+  },
+  {
+   "vph": 6.8,
+   "src": {
+    "kind": "street_end",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 110.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 8959,
+    "lon": 69.30526,
+    "lat": 41.30601,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 137.2
+   }
+  },
+  {
+   "vph": 6.0,
+   "src": {
+    "kind": "side_road",
+    "node": 44610,
+    "lon": 69.288996,
+    "lat": 41.308606,
+    "road": "Yax'yo Gulomov ko'chasi",
+    "road_names": [
+     "Yax'yo Gulomov ko'chasi",
+     "Яхе Гулямова улица",
+     "Yax'yo Gulomov ko'chasi",
+     "Yaxe Gulomov Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 20.4
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 5.7,
+   "src": {
+    "kind": "street_end",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 110.1
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 5.6,
+   "src": {
+    "kind": "side_road",
+    "node": 45445,
+    "lon": 69.288879,
+    "lat": 41.308371,
+    "road": "Yaxyo Gulomov ko'chasi",
+    "road_names": [
+     "Yaxyo Gulomov ko'chasi",
+     "Яхе Гулямова улица",
+     "Yaxe Gulomov Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 27.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 29150,
+    "lon": 69.292159,
+    "lat": 41.307448,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 27.5
+   }
+  },
+  {
+   "vph": 5.2,
+   "src": {
+    "kind": "side_road",
+    "node": 83095,
+    "lon": 69.299436,
+    "lat": 41.30764,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 3.0,
+    "bearing": 231.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 9519,
+    "lon": 69.286275,
+    "lat": 41.309378,
+    "road": "Shahrisabz ko'chasi",
+    "road_names": [
+     "Shahrisabz ko'chasi",
+     "Шахрисабз улица",
+     "Shahrisabz ko'chasi",
+     "Shahrisabz Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 203.3
+   }
+  },
+  {
+   "vph": 4.6,
+   "src": {
+    "kind": "side_road",
+    "node": 83095,
+    "lon": 69.299436,
+    "lat": 41.30764,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 3.0,
+    "bearing": 231.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 79194,
+    "lon": 69.292281,
+    "lat": 41.307624,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 4.3
+   }
+  },
+  {
+   "vph": 4.1,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 79194,
+    "lon": 69.292281,
+    "lat": 41.307624,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 4.3
+   }
+  },
+  {
+   "vph": 2.3,
+   "src": {
+    "kind": "side_road",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 68.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 52.3
+   }
+  },
+  {
+   "vph": 1.9,
+   "src": {
+    "kind": "side_road",
+    "node": 67839,
+    "lon": 69.307185,
+    "lat": 41.305131,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 91.3
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 1.7,
+   "src": {
+    "kind": "side_road",
+    "node": 21551,
+    "lon": 69.297533,
+    "lat": 41.307291,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 224.4
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 79194,
+    "lon": 69.292281,
+    "lat": 41.307624,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 4.3
+   }
+  },
+  {
+   "vph": 1.7,
+   "src": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 195.1
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 67870,
+    "lon": 69.319947,
+    "lat": 41.304019,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "улица Махтумкули",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 77.3
+   }
+  },
+  {
+   "vph": 1.5,
+   "src": {
+    "kind": "street_end",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 110.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 7367,
+    "lon": 69.291986,
+    "lat": 41.307456,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sodiq Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 208.0
+   }
+  },
+  {
+   "vph": 1.3,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 1.1,
+   "src": {
+    "kind": "street_end",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 110.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 41890,
+    "lon": 69.306698,
+    "lat": 41.305281,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 52.3
+   }
+  },
+  {
+   "vph": 1.1,
+   "src": {
+    "kind": "side_road",
+    "node": 7101,
+    "lon": 69.306771,
+    "lat": 41.305483,
+    "road": "Botkin ko'chasi",
+    "road_names": [
+     "Botkin ko'chasi",
+     "Боткина улица",
+     "Botkin ko'chasi",
+     "Botkin Street"
+    ],
+    "highway": "primary",
+    "lanes": 4.0,
+    "bearing": 216.8
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi",
+     "Истиклол улица",
+     "Istiqlol Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 7.1
+   }
+  },
+  {
+   "vph": 1.1,
+   "src": {
+    "kind": "side_road",
+    "node": 83095,
+    "lon": 69.299436,
+    "lat": 41.30764,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 3.0,
+    "bearing": 231.1
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 1.0,
+   "src": {
+    "kind": "side_road",
+    "node": 21551,
+    "lon": 69.297533,
+    "lat": 41.307291,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 224.4
+   },
+   "dst": {
+    "kind": "street_end",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 291.1
+   }
+  },
+  {
+   "vph": 0.8,
+   "src": {
+    "kind": "side_road",
+    "node": 83095,
+    "lon": 69.299436,
+    "lat": 41.30764,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "trunk_link",
+    "lanes": 3.0,
+    "bearing": 231.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi",
+     "Истиклол улица",
+     "Istiqlol Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 7.1
+   }
+  },
+  {
+   "vph": 0.6,
+   "src": {
+    "kind": "side_road",
+    "node": 44610,
+    "lon": 69.288996,
+    "lat": 41.308606,
+    "road": "Yax'yo Gulomov ko'chasi",
+    "road_names": [
+     "Yax'yo Gulomov ko'chasi",
+     "Яхе Гулямова улица",
+     "Yax'yo Gulomov ko'chasi",
+     "Yaxe Gulomov Street"
+    ],
+    "highway": "primary",
+    "lanes": 2.0,
+    "bearing": 20.4
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 54581,
+    "lon": 69.28464,
+    "lat": 41.30985,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi",
+     "Истиклол улица",
+     "Istiqlol Street"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 7.1
+   }
+  },
+  {
+   "vph": 0.6,
+   "src": {
+    "kind": "side_road",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Istiqlol ko'chasi",
+    "road_names": [
+     "Istiqlol ko'chasi"
+    ],
+    "highway": "residential",
+    "lanes": 1.0,
+    "bearing": 68.3
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 29150,
+    "lon": 69.292159,
+    "lat": 41.307448,
+    "road": "Sodiq Azimov ko'chasi",
+    "road_names": [
+     "Sodiq Azimov ko'chasi",
+     "Садыка Азимова улица",
+     "Sodiq Azimov ko'chasi",
+     "Sadyk Azimov Street"
+    ],
+    "highway": "secondary",
+    "lanes": 2.0,
+    "bearing": 27.5
+   }
+  },
+  {
+   "vph": 0.5,
+   "src": {
+    "kind": "street_end",
+    "node": 43606,
+    "lon": 69.284594,
+    "lat": 41.309764,
+    "road": "Mahtumquli ko'chasi",
+    "road_names": [
+     "Mahtumquli ko'chasi",
+     "Махтумкули улица",
+     "Mahtumquli Street"
+    ],
+    "highway": "primary",
+    "lanes": 3.0,
+    "bearing": 110.1
+   },
+   "dst": {
+    "kind": "side_road",
+    "node": 21552,
+    "lon": 69.297589,
+    "lat": 41.30715,
+    "road": "(unnamed)",
+    "road_names": [],
+    "highway": "primary_link",
+    "lanes": 2.0,
+    "bearing": 86.5
+   }
+  }
+ ]
+}

@@ -103,3 +103,9 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 ## Website (Vercel)
 
 `site/` is a static, ready-to-deploy copy of the dashboard (`index.html`, `og.png`, `vercel.json`). In Vercel, import the repo and set the **Root Directory** to `site`, Framework Preset **Other**, no build command. To refresh it after a new model run, rebuild with `viewer/assemble_viewer.py viewer/dashboard_template.html data/work/viewer_data.json site/index.html data/work/trips.json data/work/od_graph.json` and push.
+
+## Street micro-simulation fed by the city model (SUMO)
+`pipeline/street_demand.py` takes a finished `slices_flow.npz`, finds one street by name, picks the 15-minute slice with the most cars on it and writes how many cars/h enter the street from which road and leave onto which road
+(`python3 pipeline/street_demand.py road_edges.csv.gz mahalla_zones.csv pa_vectors.npz slices_flow.npz OUT.json`, same environment variables as the slice run).
+`micro/makhtumkuli_live.py` is the SUMO street animation; with `--macro-demand micro/macro_demand_mahtumquli_base.json` its traffic is exactly those flows (`--demand-scale` multiplies them).
+First result (base run, 08:45): about 320 cars on the 3 km stretch; 7,390 cars/h enter it. SUMO with default signal plans cannot carry that (queues from about 3,000 cars/h), so check lane counts of the link roads and use real signal timings before reading absolute delays.
