@@ -525,7 +525,7 @@ TILES = {   # name: (url, attribution)
     "dark": ("https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
              "© OpenStreetMap contributors © CARTO"),
     "osm": ("https://tile.openstreetmap.org/{z}/{x}/{y}.png", "© OpenStreetMap contributors"),
-}
+}   # CARTO tiles (voyager / light / dark) need an API key since 2025-26; osm needs none (its usage policy asks for a few cached tiles only, which is what this does)
 
 
 def fetch_tile(url, path):
@@ -777,8 +777,12 @@ def main():
     ap.add_argument("--focus", type=int, default=0, help="zoom layout: junction number to start on (0 = centre)")
     ap.add_argument("--center", default="41.307206,69.302682", help="lat,lon of the centre of the simulation")
     ap.add_argument("--radius", type=float, default=1500, help="metres shown each side of the centre along the street")
-    ap.add_argument("--basemap", default="voyager", choices=["voyager", "light", "dark", "osm", "none"],
-                    help="road-map ('scheme') background: voyager = colourful, light = pale, dark, osm, none")
+    ap.add_argument("--basemap", default="osm", choices=["osm", "custom", "voyager", "light", "dark", "none"],
+                    help="road-map ('scheme') background: osm = OpenStreetMap standard tiles (no key, default), custom = your own --tile-url, none = no background. "
+                         "voyager / light / dark are CARTO tiles, which now need an API key (use --tile-url instead)")
+    ap.add_argument("--tile-url", help="tile server template with {z}/{x}/{y}, e.g. https://api.maptiler.com/maps/streets-v2/256/{z}/{x}/{y}.png?key=YOURKEY  (use with --basemap custom)")
+    ap.add_argument("--tile-attribution", default="© map provider", help="credit printed under the video when --basemap custom")
+    ap.add_argument("--tile-dark", action="store_true", help="the custom tiles are dark (switches to the light-on-dark colours)")
     ap.add_argument("--dpi", type=int, default=110, help="video resolution (110 -> 1760 px wide; 240 -> 3840 px)")
     ap.add_argument("--layout", default="strips", choices=["strips", "zoom"],
                     help="strips: whole street at once as stacked rows; zoom: one window, pan with keys")
@@ -794,7 +798,13 @@ def main():
     args = ap.parse_args()
 
     name_re = re.compile(args.name_pattern, re.I)
-    set_theme(args.basemap in ("voyager", "light", "osm"))
+    if args.tile_url and args.basemap == "osm":
+        args.basemap = "custom"
+    if args.basemap == "custom":
+        if not args.tile_url:
+            sys.exit("--basemap custom needs --tile-url")
+        TILES["custom"] = (args.tile_url, args.tile_attribution)
+    set_theme(args.basemap in ("voyager", "light", "osm") or (args.basemap == "custom" and not args.tile_dark))
     os.makedirs(args.workdir, exist_ok=True)
     lat0, lon0 = (float(v) for v in args.center.split(","))
     tag = f"{lat0:.5f}_{lon0:.5f}_{int(args.radius)}"
