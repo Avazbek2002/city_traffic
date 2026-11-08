@@ -1,0 +1,128 @@
+<!doctype html><meta charset="utf-8"><title>Tashkent zoom video stage</title>
+<style>html,body{margin:0;background:#0a1017}canvas{display:block}</style>
+<canvas id="c" width="1080" height="1350"></canvas>
+<script>
+// Deterministic frame renderer: window.renderFrame(f) draws frame f on a 1080x1350 canvas (any order). City map -> zoom to one junction (lane level) -> zoom out -> next junction ... -> end card.
+const W = 1080, H = 1350, FPS = 30, BG = '#0a1017', LINE = '#1f2f40', FG = '#d9e4ee', MUT = '#8499ac', DIM = '#4d6277', AMB = '#f2b64c', RED = '#ff6a5c', MID = '#f4c552', FREE = '#a9c9e6';
+const FD = '"Liberation Sans Narrow","DejaVu Sans Condensed",Arial,sans-serif', FB = '"Liberation Sans",Arial,sans-serif';
+const VX = 0, VY = 150, VW = 1080, VH = 980;                       // map viewport
+const INTRO = 3.4, IN = 2.5, HOLD = 3.3, OUT = 1.7, GAP = 0.2, BLOCK = IN + HOLD + OUT + GAP, END = 4.6, SIMSPEED = 4, S1 = 5;   // seconds; S1 = pixels per metre at junction level (about 215 m across)
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, w) => a + (b - a) * w, ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2, smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const nf = n => Math.round(n).toLocaleString('en-US');
+const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
+function text(s, x, y, size, col, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; g.fillStyle = col; g.textAlign = o.a || 'left'; g.globalAlpha = o.al === undefined ? 1 : o.al; g.fillText(s, x, y); g.globalAlpha = 1; }
+function tw(s, size, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; return g.measureText(s).width; }
+function wrap(s, x, y, maxW, size, col, lh, o = {}) { g.font = `${o.w || ''} ${size}px ${o.f || FB}`; const words = s.split(' '); let line = '', yy = y; for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { text(line, x, yy, size, col, o); yy += lh; line = w; } else line = t; } text(line, x, yy, size, col, o); return yy + lh; }
+const COL = ['#3a6a9e', '#3fb0a6', '#e6c84a', '#f08a3c', '#e5484d', '#182636'];
+let CITY, TG, SC = {}, TOTAL = 0, SEQ = [], S0 = 0, C0 = [0, 0];
+async function init() {
+  CITY = await (await fetch('city.json')).json(); TG = await (await fetch('targets.json')).json();
+  for (const t of TG) { const d = await (await fetch(t.id + '.json')).json(); SC[t.id] = prep(d, t); }
+  // city bounds from the district outlines
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; CITY.rings.forEach(r => r.forEach(([x, y]) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }));
+  S0 = Math.min(VW / (x1 - x0), VH / (y1 - y0)) * 0.94; C0 = [(x0 + x1) / 2, (y0 + y1) / 2];
+  // chunk bounding boxes (for culling)
+  const n = CITY.off.length - 1; CITY.bb = new Float32Array(4 * n); for (let k = 0; k < n; k++) { let a = 1e9, b = -1e9, c = 1e9, d = -1e9; for (let j = CITY.off[k]; j < CITY.off[k+1]; j++) { a = Math.min(a, CITY.x[j]); b = Math.max(b, CITY.x[j]); c = Math.min(c, CITY.y[j]); d = Math.max(d, CITY.y[j]); } CITY.bb.set([a, b, c, d], 4 * k); }
+  let T = INTRO; TG.forEach((t, i) => { SEQ.push({ i, t0: T }); T += BLOCK; }); TOTAL = T + END; window.TOTALF = Math.round(TOTAL * FPS); window.READY = true;
+}
+function prep(d, t) {
+  const L = d.lanes, off = b64(L.off, Uint32Array), pr = b64(L.pts, Int16Array), C = d.cars, n = C.n, co = b64(C.off, Uint32Array), dx = b64(C.x, Int16Array), dy = b64(C.y, Int16Array), vv = b64(C.v, Uint8Array), NN = dx.length;
+  const X = new Float32Array(NN), Y = new Float32Array(NN), HD = new Float32Array(NN), VS = new Float32Array(NN);
+  for (let k = 0; k < n; k++) { const a = co[k], e = co[k+1]; let ax = 0, ay = 0; for (let i = a; i < e; i++) { ax += dx[i]; ay += dy[i]; X[i] = ax / 10 + t.gx; Y[i] = ay / 10 + t.gy; VS[i] = vv[i] / 3; }
+    let h = 0; for (let i = e - 2; i >= a; i--) { const mx = X[i+1] - X[i], my = Y[i+1] - Y[i]; if (Math.hypot(mx, my) > 0.4) h = Math.atan2(my, mx); HD[i] = h; } if (e - 1 >= a) HD[e-1] = e - 2 >= a ? HD[e-2] : 0; }
+  const P = new Float32Array(pr.length); for (let i = 0; i < pr.length; i += 2) { P[i] = pr[i] / 10 + t.gx; P[i+1] = pr[i+1] / 10 + t.gy; }
+  return { t, lanes: { n: L.n, off, P, cls: b64(L.cls, Uint8Array) }, cars: { n, t0: b64(C.t0, Uint16Array), off: co, X, Y, HD, VS }, labels: d.labels.map(l => ({ ...l, x: l.x + t.gx, y: l.y + t.gy })), tls: d.tls.map(([x, y]) => [x + t.gx, y + t.gy]), rec: d.record };
+}
+// ------------------------------------------------------------------ camera
+function camAt(t) {
+  const out = { blk: -1, u: 0, s: S0, cx: C0[0], cy: C0[1], tl: 0, k: -1 };
+  if (t < INTRO) { out.k = 0; return out; } if (t >= TOTAL - END) { out.k = TG.length - 1; return out; }
+  const k = clamp(Math.floor((t - INTRO) / BLOCK), 0, TG.length - 1), tl = t - INTRO - k * BLOCK; out.k = k; out.tl = tl; out.blk = k;
+  let u = 0, hv = 0; if (tl < IN) u = ease(tl / IN); else if (tl < IN + HOLD) { u = 1; hv = (tl - IN) / HOLD; } else if (tl < IN + HOLD + OUT) { u = 1 - ease((tl - IN - HOLD) / OUT); hv = 1; }
+  const T = TG[k], s = S0 * Math.pow(S1 / S0, u), w = (1 / S0 - 1 / s) / (1 / S0 - 1 / S1), px = T.gx + T.jx, py = T.gy + T.jy;
+  out.u = u; out.s = s * (1 + 0.05 * hv * u); out.cx = C0[0] + (px - C0[0]) * w; out.cy = C0[1] + (py - C0[1]) * w; return out;
+}
+// ------------------------------------------------------------------ drawing
+function drawCity(c, alpha) {
+  if (alpha <= 0.01) return; const X = x => VX + VW / 2 + (x - c.cx) * c.s, Y = y => VY + VH / 2 - (y - c.cy) * c.s, cl = CITY.cls[String(TG[c.k].pk)] || CITY.cls[Object.keys(CITY.cls)[0]];
+  g.save(); g.beginPath(); g.rect(VX, VY, VW, VH); g.clip(); g.globalAlpha = alpha; g.lineWidth = 1; g.strokeStyle = LINE; g.fillStyle = 'rgba(255,255,255,0.014)';
+  CITY.rings.forEach(r => { g.beginPath(); r.forEach(([x, y], i) => i ? g.lineTo(X(x), Y(y)) : g.moveTo(X(x), Y(y))); g.closePath(); g.fill(); g.stroke(); });
+  const kz = c.s / S0, paths = [0, 1, 2, 3, 4, 5].map(() => new Path2D()), x0 = c.cx - VW / 2 / c.s, x1 = c.cx + VW / 2 / c.s, y0 = c.cy - VH / 2 / c.s, y1 = c.cy + VH / 2 / c.s, n = CITY.off.length - 1;
+  for (let k = 0; k < n; k++) { const b = CITY.bb; if (b[4*k+1] < x0 || b[4*k] > x1 || b[4*k+3] < y0 || b[4*k+2] > y1) continue; const p = paths[cl[k]], a = CITY.off[k], e = CITY.off[k+1]; p.moveTo(X(CITY.x[a]), Y(CITY.y[a])); for (let j = a + 1; j < e; j++) p.lineTo(X(CITY.x[j]), Y(CITY.y[j])); }
+  g.lineCap = 'round'; g.lineJoin = 'round'; const wz = 1 + 0.55 * Math.log2(kz + 1); [5, 0, 1, 2, 3, 4].forEach(b => { g.strokeStyle = COL[b]; g.lineWidth = (b === 5 ? 0.7 : 1.1 + b * 0.55) * wz; g.stroke(paths[b]); });
+  g.restore();
+}
+function drawScene(c, S, simT) {
+  const T = S.t, a = smooth(0.1, 0.32, c.s); if (a <= 0.01) return; const X = x => VX + VW / 2 + (x - c.cx) * c.s, Y = y => VY + VH / 2 - (y - c.cy) * c.s, L = S.lanes;
+  g.save(); g.beginPath(); g.rect(VX, VY, VW, VH); g.clip(); g.globalAlpha = a; g.lineCap = 'butt'; g.lineJoin = 'round';
+  const x0 = c.cx - VW / 2 / c.s - 20, x1 = c.cx + VW / 2 / c.s + 20, y0 = c.cy - VH / 2 / c.s - 20, y1 = c.cy + VH / 2 / c.s + 20, vis = new Uint8Array(L.n);
+  const paths = [0, 1, 2, 3].map(() => new Path2D());
+  for (let k = 0; k < L.n; k++) { const A = L.off[k], E = L.off[k+1]; let inside = false; for (let i = A; i < E; i++) { const x = L.P[2*i], y = L.P[2*i+1]; if (x > x0 && x < x1 && y > y0 && y < y1) { inside = true; break; } } if (!inside) continue; const p = paths[L.cls[k]]; p.moveTo(X(L.P[2*A]), Y(L.P[2*A+1])); for (let i = A + 1; i < E; i++) p.lineTo(X(L.P[2*i]), Y(L.P[2*i+1])); }
+  [[0, '#18283a', '#2a4058', 3.2], [1, '#1c2e42', '#33506c', 3.2], [2, '#21364c', '#3b5c7c', 3.4], [3, '#1c2e42', '#33506c', 3.2]].forEach(([i, fill, edge, wm]) => { g.strokeStyle = edge; g.lineWidth = Math.max(1.4, (wm + 0.3) * c.s); g.stroke(paths[i]); g.strokeStyle = fill; g.lineWidth = Math.max(0.7, wm * c.s); g.stroke(paths[i]); });
+  // window outline
+  g.setLineDash([10, 8]); g.strokeStyle = 'rgba(242,182,76,.55)'; g.lineWidth = 1.5; g.strokeRect(X(T.gx - 750), Y(T.gy + 750), 1500 * c.s, 1500 * c.s); g.setLineDash([]);
+  // signals
+  g.strokeStyle = AMB; g.lineWidth = 2; S.tls.forEach(([x, y]) => { const px = X(x), py = Y(y); if (px < -20 || py < VY - 20 || px > W + 20 || py > VY + VH + 20) return; g.beginPath(); g.arc(px, py, Math.max(3, 4.5 * c.s), 0, 6.2832); g.stroke(); });
+  // street names when close
+  if (c.s > 1.3) { g.font = '700 22px ' + FB; g.textAlign = 'center'; g.textBaseline = 'middle'; S.labels.forEach(lb => { if (!/[A-Za-z]/.test(lb.t)) return; const px = X(lb.x), py = Y(lb.y); if (px < 40 || px > W - 40 || py < VY + 20 || py > VY + VH - 20) return; let ang = -lb.a * Math.PI / 180; if (Math.cos(ang) < 0) ang += Math.PI; g.save(); g.translate(px, py); g.rotate(ang); g.lineWidth = 5; g.strokeStyle = 'rgba(10,16,23,.95)'; g.strokeText(lb.t, 0, 0); g.fillStyle = '#9fb3c6'; g.fillText(lb.t, 0, 0); g.restore(); }); g.textBaseline = 'alphabetic'; }
+  // cars
+  if (c.s > 0.2) {
+    const C = S.cars, cl = Math.max(4.5 * c.s, 4.5), cw = Math.max(1.9 * c.s, 2.2), tr = simT % S.rec, byC = [[], [], []]; let stopped = 0;
+    for (let k = 0; k < C.n; k++) { const A = C.off[k], len = C.off[k+1] - A, u = tr - C.t0[k]; if (u < 0 || u > len - 1) continue; const i = A + Math.floor(u), j = Math.min(i + 1, C.off[k+1] - 1), f = u - Math.floor(u);
+      const x = C.X[i] + (C.X[j] - C.X[i]) * f, y = C.Y[i] + (C.Y[j] - C.Y[i]) * f, v = C.VS[i] + (C.VS[j] - C.VS[i]) * f, px = X(x), py = Y(y); if (px < -10 || py < VY - 10 || px > W + 10 || py > VY + VH + 10) continue; byC[v < 1.5 ? 0 : v < 5 ? 1 : 2].push(px, py, C.HD[i]); }
+    [RED, MID, FREE].forEach((col, ci) => { g.fillStyle = col; const arr = byC[ci]; for (let q = 0; q < arr.length; q += 3) { g.save(); g.translate(arr[q], arr[q+1]); g.rotate(-arr[q+2]); g.fillRect(-cl / 2, -cw / 2, cl, cw); g.restore(); } });
+  }
+  g.restore();
+}
+function stoppedAt(S, simT) {   // cars slower than 5.4 km/h within 60 m of the junction
+  const C = S.cars, tr = simT % S.rec, T = S.t, jx = T.gx + T.jx, jy = T.gy + T.jy; let n = 0, all = 0;
+  for (let k = 0; k < C.n; k++) { const A = C.off[k], len = C.off[k+1] - A, u = tr - C.t0[k]; if (u < 0 || u > len - 1) continue; const i = A + Math.floor(u); if (Math.hypot(C.X[i] - jx, C.Y[i] - jy) > 60) continue; all++; if (C.VS[i] < 1.5) n++; } return [n, all];
+}
+function overlay(t, c) {
+  // top band
+  g.fillStyle = BG; g.fillRect(0, 0, W, VY); g.fillRect(0, VY + VH, W, H - VY - VH);
+  text('TASHKENT · MORNING RUSH · MODEL', 40, 52, 26, MUT, { f: FD, w: '700' });
+  const k = c.k, T = TG[k], inBlk = t >= INTRO && t < TOTAL - END, shown = inBlk ? T.clock : '';
+  if (shown) { text(shown, W - 40, 62, 64, FG, { f: FD, w: '700', a: 'right' }); text('busiest 15 minutes on this street', W - 40, 94, 20, MUT, { a: 'right' }); }
+  const sub = t < INTRO ? 'A model of about 350,000 car trips between 06:00 and 10:00' : inBlk ? `Congested street ${k + 1} of ${TG.length} · cars drawn one by one` : '';
+  text(sub, 40, 100, 24, FG, { f: FB });
+  g.fillStyle = LINE; g.fillRect(40, 124, W - 80, 1);
+  // bottom band
+  if (inBlk && c.tl >= 0) {
+    const a = c.u > 0.05 || c.tl < IN + HOLD + OUT ? 1 : 0.0; const S = SC[T.id], simT = 70 + (t - INTRO - k * BLOCK) * SIMSPEED, [st, all] = stoppedAt(S, simT);
+    text(T.label + ' street', 40, 1190, 64, FG, { f: FD, w: '700' });
+    text(nf(T.flow_vph), 40, 1252, 58, AMB, { f: FD, w: '700' }); text('cars per hour on this street (city model)', 40 + tw(nf(T.flow_vph), 58, { f: FD, w: '700' }) + 16, 1252, 26, FG);
+    const near = c.u > 0.9 ? `${st} of ${all} cars within 60 m of this junction are stopped` : '';
+    if (near) text(near, 40, 1296, 26, RED, { w: '700' }); else text('Zooming in to the busiest junction…', 40, 1296, 26, MUT);
+  } else if (t < INTRO) { text('Colour = how full each road is', 40, 1196, 30, FG, { w: '700' }); text('blue: free  ·  yellow: busy  ·  red: over capacity', 40, 1238, 26, MUT); }
+  text('Model output, not measured traffic · lane-level view: SUMO simulator fed with the city model', 40, H - 14, 18, DIM);
+}
+function drawPins(c, t) {
+  const X = x => VX + VW / 2 + (x - c.cx) * c.s, Y = y => VY + VH / 2 - (y - c.cy) * c.s, a = 1 - smooth(0.08, 0.2, c.s); if (a <= 0.01) return;
+  TG.forEach((T, i) => { const x = X(T.gx + T.jx), y = Y(T.gy + T.jy), appear = t < INTRO ? smooth(1.4 + i * 0.35, 1.8 + i * 0.35, t) : 1, cur = c.k === i && t >= INTRO && t < TOTAL - END, r = 13 + (cur ? 4 * Math.sin(t * 8) : 0);
+    g.globalAlpha = a * appear; g.lineWidth = 3; g.strokeStyle = AMB; g.fillStyle = 'rgba(10,16,23,.9)'; g.beginPath(); g.arc(x, y, r, 0, 6.2832); g.fill(); g.stroke(); g.fillStyle = AMB; g.beginPath(); g.arc(x, y, 4.5, 0, 6.2832); g.fill();
+    g.font = '700 25px ' + FB; g.textAlign = 'left'; g.lineWidth = 5; g.strokeStyle = 'rgba(10,16,23,.95)'; g.strokeText(T.label, x + r + 8, y + 9); g.fillStyle = '#ffd98a'; g.fillText(T.label, x + r + 8, y + 9); g.globalAlpha = 1; });
+}
+function intro(t) {
+  const a = 1 - smooth(2.4, 3.2, t); if (a <= 0) return; g.save(); g.beginPath(); g.rect(VX, VY, VW, VH); g.clip(); const gr = g.createLinearGradient(0, VY, 0, VY + 330); gr.addColorStop(0, `rgba(10,16,23,${0.92 * a})`); gr.addColorStop(1, 'rgba(10,16,23,0)'); g.fillStyle = gr; g.fillRect(VX, VY, VW, 330);
+  g.globalAlpha = a; text('From the whole city', 40, VY + 80, 64, FG, { f: FD, w: '700', al: smooth(0, .5, t) }); text('to a single lane', 40, VY + 148, 64, AMB, { f: FD, w: '700', al: smooth(.4, .9, t) }); g.restore();
+}
+function endCard(t) {
+  const a = smooth(TOTAL - END, TOTAL - END + 0.6, t); if (a <= 0) return; g.fillStyle = `rgba(10,16,23,${a})`; g.fillRect(0, 0, W, H); const al = a;
+  text('Modelled, not measured', 60, 250, 74, FG, { f: FD, w: '700', al });
+  let y = wrap('About 350,000 car trips, 06:00–10:00. Each car follows the shortest route at the traffic of that moment.', 60, 330, 960, 36, FG, 48, { al });
+  y = wrap('Street views: the city model’s car flows on every road of a 1.5 km window, run in the SUMO traffic simulator. Where the junctions cannot pass them, cars queue.', 60, y + 20, 960, 32, MUT, 44, { al });
+  y = wrap('Signal timings and the share of commuters who drive (45%) are assumptions. Not yet checked against real traffic data.', 60, y + 20, 960, 32, MUT, 44, { al });
+  g.globalAlpha = al; g.fillStyle = LINE; g.fillRect(60, y + 40, 960, 2); g.globalAlpha = 1;
+  text('Avazbek Isroilov', 60, y + 130, 60, AMB, { f: FD, w: '700', al }); text('DM me for data-driven projects', 60, y + 184, 36, FG, { al }); text('Telegram @aisroilov2002  ·  linkedin.com/in/avazbeki', 60, y + 236, 30, MUT, { al });
+  text('Map data © OpenStreetMap contributors', 60, H - 40, 22, DIM, { al });
+}
+function renderFrame(f) {
+  const t = f / FPS, c = camAt(t); g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = BG; g.fillRect(0, 0, W, H);
+  drawCity(c, 1 - smooth(0.15, 0.45, c.s)); const inBlk = t >= INTRO && t < TOTAL - END;
+  if (inBlk || t >= TOTAL - END) { const T = TG[c.k], S = SC[T.id], simT = 70 + (t - INTRO - c.k * BLOCK) * SIMSPEED; if (inBlk && c.tl < IN + HOLD + OUT) drawScene(c, S, simT); }
+  g.save(); g.beginPath(); g.rect(VX, VY, VW, VH); g.clip(); drawPins(c, t); g.restore(); intro(t); overlay(t, c); endCard(t);
+}
+window.renderFrame = renderFrame; init();
+</script>
