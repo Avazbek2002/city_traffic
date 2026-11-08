@@ -66,7 +66,17 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
 .note { color: var(--dim); font-size: 11px; }
 .foot { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 16px; padding: 2px 0 10px; color: var(--muted); font-size: 12px; text-align: center; }
 .foot a { color: var(--fg); text-decoration: underline; text-decoration-color: var(--dim); text-underline-offset: 3px; } .foot a:hover { text-decoration-color: var(--fg); } .foot .sep { color: var(--dim); }
+#micro { position: fixed; inset: 0; z-index: 100; background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr) 330px; grid-template-rows: auto minmax(0, 1fr); gap: 0; }
+#micro .mh { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+#micro h2 { font: 600 24px/1 var(--display); letter-spacing: .03em; text-transform: uppercase; margin: 0 0 3px; } #micro .mc { display: flex; gap: 8px; align-items: center; }
+#micro .mb { position: relative; min-height: 0; touch-action: none; } #micro .ms { overflow: auto; padding: 12px 14px; border-left: 1px solid var(--line); background: var(--panel); font-size: 12.5px; }
+.ms h3 { font: 600 11px var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 6px; } .ms h3:first-child { margin-top: 0; }
+.ms .kv { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; } .ms .kv b { font: 500 13px var(--mono); font-variant-numeric: tabular-nums; }
+.ms table { width: 100%; border-collapse: collapse; font-size: 11.5px; } .ms th { text-align: right; color: var(--muted); font-weight: 500; padding: 2px 0 4px 6px; } .ms th:first-child, .ms td:first-child { text-align: left; padding-left: 0; }
+.ms td { text-align: right; padding: 2px 0 2px 6px; font-family: var(--mono); border-top: 1px solid var(--line); } .ms td:first-child { font-family: var(--body); max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ms .big { font: 600 30px/1 var(--display); font-variant-numeric: tabular-nums; } .ms p { color: var(--muted); margin: 6px 0; line-height: 1.45; }
 @media (max-width: 900px) {
+  #micro { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; } #micro .ms { max-height: 38vh; border-left: 0; border-top: 1px solid var(--line); }
   html, body { height: auto; } .app { height: auto; display: flex; flex-direction: column; }
   #wins { display: flex; flex-direction: column; gap: 10px; } .win { height: 68vh; min-height: 380px; } .div { display: none !important; }
   #wins .win.max { position: fixed; inset: 8px; height: auto; }
@@ -76,7 +86,7 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
 </style>
 <div class="app">
   <header>
-    <div><h1>Tashkent Morning Dashboard</h1><div class="note" style="margin-top:4px">Model output, not measured traffic. 45% of commuters driving and a 40 s signal delay are assumptions; results are not yet calibrated.</div></div>
+    <div><h1>Tashkent Morning Dashboard</h1><div class="note" style="margin-top:4px">Model output, not measured traffic. 45% of commuters driving and a 40 s signal delay are assumptions; results are not yet calibrated. <b style="color:var(--amber)">Click an amber pin on the road map (or use “Zoom into a congested street”) to see its cars lane by lane.</b></div></div>
     <div class="hl"><span>Layout</span><select id="layout" aria-label="Window layout"><option value="main">Roads + two graphs</option><option value="row">Side by side</option><option value="stack">Stacked</option></select><span class="note">drag the bars between windows to resize · ⛶ maximizes one</span></div>
   </header>
   <div class="strip">
@@ -95,6 +105,7 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
         <select id="aFoc" aria-label="Only trips of one district" hidden><option value="0">All districts</option></select>
         <select id="aDir" aria-label="Trip direction" hidden><option value="any">from or to</option><option value="from">leaving</option><option value="to">arriving</option></select>
         <select id="aUpd" aria-label="Traffic update interval"><option value="900">Update 15 min</option><option value="300" selected>Update 5 min</option><option value="60">Update 1 min</option></select>
+        <select id="aStreet" aria-label="Zoom into a congested street (lane-level simulation)" hidden><option value="">Zoom into a congested street…</option></select>
         <button class="sp max-btn" aria-label="Maximize window" title="Maximize / restore">⛶</button></div>
       <div class="body" id="bA"><canvas class="layer"></canvas><canvas class="layer"></canvas>
         <div class="zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="rs" aria-label="Reset view" style="font-size:11px">⌂</button></div>
@@ -124,6 +135,15 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
     <select id="spd" aria-label="Clock speed"><option value="60">60×</option><option value="120">120×</option><option value="300" selected>300×</option><option value="600">600×</option></select>
     <canvas id="tl" aria-label="Vehicles on the road and people on the move over time"></canvas>
   </div>
+  <div id="micro" hidden role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="mh"><div><h2 id="mTitle">–</h2><div class="note" id="mSub"></div></div>
+      <div class="mc"><button id="mPlay">Pause</button><select id="mSpd" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select><button id="mClose" aria-label="Back to the city map">✕ Back to the city map</button></div></div>
+    <div class="mb" id="mBody"><canvas class="layer"></canvas><canvas class="layer"></canvas>
+      <div class="zoom"><button data-z="in" aria-label="Zoom in">+</button><button data-z="out" aria-label="Zoom out">−</button><button data-z="rs" aria-label="Reset view" style="font-size:11px">⌂</button></div>
+      <div class="legend" id="mLeg"><span><i style="background:var(--dot-free)"></i>moving</span><span><i style="background:var(--dot-mid)"></i>slow</span><span><i style="background:var(--dot-slow)"></i>stopped</span><span><i style="border:2px solid var(--amber);box-sizing:border-box"></i>traffic signal</span><span>1 car drawn = 1 car · scroll to zoom to lane level</span></div>
+      <div class="over" id="mMsg" hidden></div></div>
+    <aside class="ms" id="mSide"></aside>
+  </div>
   <footer class="foot">
     <span>Built by <b>Avazbek Isroilov</b> · for data-driven projects, get in touch:</span>
     <span><a href="https://t.me/aisroilov2002" target="_blank" rel="noopener">Telegram @aisroilov2002</a> <span class="sep">·</span> <a href="https://www.linkedin.com/in/avazbeki/" target="_blank" rel="noopener">LinkedIn</a></span>
@@ -131,7 +151,7 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
   </footer>
 </div>
 <script>
-const D = __DATA__, TR = __TRIPS__, G = __GRAPH__;
+const D = __DATA__, TR = __TRIPS__, G = __GRAPH__, SC = __SCENES__;
 const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
 const $ = id => document.getElementById(id), css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), lerp = (a, b, w) => a + (b - a) * w;
 const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
@@ -276,6 +296,87 @@ function setMode(m) { A.mode = m; $('aMode').value = m; $('aFoc').hidden = $('aD
 $('aMode').onchange = e => setMode(e.target.value); $('aFoc').onchange = e => { TP.foc = +e.target.value; }; $('aDir').onchange = e => { TP.dir = e.target.value; };
 $('aRoads').onchange = e => { A.show.roads = e.target.checked; VA.dirty = true; }; $('aUpd').onchange = e => { A.step = +e.target.value; A.bin = -1; };
 
+// =====================================================================================  congested streets: pins on the city map + lane-level (SUMO) street view
+const PIN = (SC || []).map(s => ({ ...s, wx: (s.centre[1] - D.lon0) * COSL, wy: -(s.centre[0] - D.lat0) }));
+const pinAt = e => { const r = $('bA').getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top; let b = -1, bd = 18; PIN.forEach((p, i) => { const d = Math.hypot(VA.sx(p.wx) - mx, VA.sy(p.wy) - my); if (d < bd) { bd = d; b = i; } }); return b; };
+let pinHover = -1;
+if (PIN.length) {
+  const sel = $('aStreet'); sel.hidden = false; [...PIN].sort((a, b) => b.delay_vehicle_hours - a.delay_vehicle_hours).forEach(p => sel.insertAdjacentHTML('beforeend', `<option value="${p.id}">${p.label}</option>`));
+  sel.onchange = () => { if (sel.value) openScene(sel.value); sel.value = ''; };
+  VA.onHover = e => { pinHover = pinAt(e); $('bA').style.cursor = pinHover >= 0 ? 'pointer' : ''; }; VA.onLeave = () => { pinHover = -1; };
+  VA.onClick = e => { const i = pinAt(e); if (i >= 0) openScene(PIN[i].id); };
+}
+function drawPinsA() {
+  if (!PIN.length || !VA.W) return; const { DPR, sx, sy } = VA; gAD.setTransform(DPR, 0, 0, DPR, 0, 0); gAD.font = '600 11px "IBM Plex Sans", sans-serif'; gAD.textAlign = 'left'; gAD.lineJoin = 'round';
+  PIN.forEach((p, i) => { const x = sx(p.wx), y = sy(p.wy), hot = i === pinHover, r = hot ? 10 : 7.5;
+    gAD.lineWidth = 2; gAD.strokeStyle = '#f2b64c'; gAD.fillStyle = 'rgba(10,16,23,.88)'; gAD.beginPath(); gAD.arc(x, y, r, 0, 6.2832); gAD.fill(); gAD.stroke();
+    gAD.fillStyle = '#f2b64c'; gAD.beginPath(); gAD.arc(x, y, 2.6, 0, 6.2832); gAD.fill();
+    gAD.lineWidth = 3; gAD.strokeStyle = 'rgba(10,16,23,.9)'; gAD.strokeText(p.label, x + r + 4, y + 4); gAD.fillStyle = hot ? '#fff' : '#ffd98a'; gAD.fillText(p.label, x + r + 4, y + 4); });
+}
+const M = { d: null, t: 0, playing: true, speed: 1, cache: {}, V: null, id: null }, mBody = $('mBody'), [cMR, cMC] = [...mBody.querySelectorAll('canvas.layer')], gMR = cMR.getContext('2d'), gMC = cMC.getContext('2d');
+const MH = 750, MV = makeView(mBody, { x0: -MH, x1: MH, y0: -MH, y1: MH });
+const mnorm = t => (t || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+function prepScene(d) {
+  const L = d.lanes, off = b64(L.off, Uint32Array), pr = b64(L.pts, Int16Array), pts = new Float32Array(pr.length); for (let i = 0; i < pr.length; i += 2) { pts[i] = pr[i] / 10; pts[i+1] = -pr[i+1] / 10; }
+  const C = d.cars, n = C.n, coff = b64(C.off, Uint32Array), dx = b64(C.x, Int16Array), dy = b64(C.y, Int16Array), vv = b64(C.v, Uint8Array), NN = dx.length, X = new Float32Array(NN), Y = new Float32Array(NN), HD = new Float32Array(NN), VS = new Float32Array(NN);
+  for (let k = 0; k < n; k++) { const a = coff[k], e = coff[k+1]; let ax = 0, ay = 0; for (let i = a; i < e; i++) { ax += dx[i]; ay += dy[i]; X[i] = ax / 10; Y[i] = -ay / 10; VS[i] = vv[i] / 3; }
+    let h = null; for (let i = e - 2; i >= a; i--) { const mx = X[i+1] - X[i], my = Y[i+1] - Y[i]; if (Math.hypot(mx, my) > 0.4) { h = Math.atan2(my, mx); } HD[i] = h === null ? 0 : h; } HD[e-1] = e - 2 >= a ? HD[e-2] : 0;
+    let first = null; for (let i = a; i < e; i++) { if (HD[i] !== 0 || first !== null) { first = first ?? HD[i]; break; } } }
+  return { d, lanes: { n: L.n, off, pts, w: b64(L.w, Uint8Array), cls: b64(L.cls, Uint8Array) }, cars: { n, t0: b64(C.t0, Uint16Array), off: coff, X, Y, HD, VS }, rec: d.record };
+}
+async function openScene(id) {
+  M.id = id; const p = PIN.find(q => q.id === id); $('micro').hidden = false; document.body.style.overflow = 'hidden'; $('mTitle').textContent = p ? p.label : id; $('mSub').textContent = 'Lane-level simulation of the most congested 1.5 km × 1.5 km around this street · ' + (p ? p.clock : '') + ' peak';
+  $('mSide').innerHTML = ''; M.d = null; $('mMsg').hidden = false; $('mMsg').textContent = 'Loading…'; $('mClose').focus();
+  try { const r = M.cache[id] || (M.cache[id] = fetch('scenes/' + id + '.json').then(x => { if (!x.ok) throw new Error('HTTP ' + x.status); return x.json(); }).then(prepScene)); const sc = await r; if (M.id !== id) return;
+    M.d = sc; M.t = 0; $('mMsg').hidden = true; MV.reset(); MV.resize(); MV.dirty = true; sideScene(sc); }
+  catch (err) { delete M.cache[id]; $('mMsg').textContent = location.protocol === 'file:' ? 'The street files cannot be read when the page is opened as a local file. Serve the folder over http (for example: python3 -m http.server in the site folder) or open the website.' : 'Could not load the street data (' + err.message + ').'; }
+}
+function closeScene() { $('micro').hidden = true; document.body.style.overflow = ''; M.id = null; M.d = null; }
+$('mClose').onclick = closeScene; $('mPlay').onclick = () => { M.playing = !M.playing; $('mPlay').textContent = M.playing ? 'Pause' : 'Play'; }; $('mSpd').onchange = e => { M.speed = +e.target.value; };
+window.addEventListener('keydown', e => { if (!$('micro').hidden) { if (e.code === 'Escape') closeScene(); else if (e.code === 'Space' && !/SELECT|BUTTON/.test(document.activeElement.tagName)) { e.preventDefault(); $('mPlay').click(); } } }, true);
+function sideScene(sc) {
+  const d = sc.d, m = d.macro, u = d.micro, st = m.streets, cmp = u.compare.filter(r => r.sumo_vph !== null).slice(0, 8);
+  $('mSide').innerHTML = `<h3>Right now in this window</h3><div class="big" id="mLive">–</div><div class="note" id="mLive2"></div>
+  <h3>City model at ${d.clock}</h3>
+  <div class="kv"><span>Cars on ${d.label.replace(' (for comparison)', '')} in this window</span><b>${nf(m.cars_on_street)}</b></div>
+  <div class="kv"><span>Cars on all roads in the window</span><b>${nf(m.window_total_cars)}</b></div>
+  <div class="kv"><span>Cars per hour entering the window</span><b>${nf(m.entering_vph)}</b></div>
+  <h3>This lane-level run</h3>
+  <div class="kv"><span>Average cars in the window</span><b>${nf(u.mean_cars_in_window)}</b></div>
+  <div class="kv"><span>Average speed</span><b>${u.mean_kmh.toFixed(0)} km/h</b></div>
+  <div class="kv"><span>Cars waiting to enter the map</span><b>${nf(u.waiting_to_enter)}</b></div>
+  <h3>Cars per hour: city model vs this run</h3>
+  <table><tr><th>Street</th><th>city</th><th>lanes</th></tr>${cmp.map(r => `<tr><td title="${r.street}">${r.street}</td><td>${nf(r.macro_vph)}</td><td>${nf(r.sumo_vph)}</td></tr>`).join('')}</table>
+  <p>Every road in the window gets the cars per hour the city model gives it at ${d.clock} (the busiest 15 minutes on this street). Where the junctions cannot pass that many cars, queues form, as they would on the street.</p>
+  <p>Not real traffic: the city model is not calibrated, signal timings are assumed, and buses, taxis and trucks are not included.</p>`;
+}
+function drawRoadsM() {
+  const sc = M.d, { W, H, DPR, sx, sy } = MV; gMR.setTransform(DPR, 0, 0, DPR, 0, 0); gMR.clearRect(0, 0, W, H); if (!sc) return; const L = sc.lanes, s = MV.s;
+  const draw = (cls, wExtra, col) => { const p = new Path2D(); for (let k = 0; k < L.n; k++) { if (cls.includes(L.cls[k]) === false) continue; const a = L.off[k], e = L.off[k+1]; p.moveTo(sx(L.pts[2*a]), sy(L.pts[2*a+1])); for (let i = a + 1; i < e; i++) p.lineTo(sx(L.pts[2*i]), sy(L.pts[2*i+1])); }
+    return p; };
+  gMR.lineCap = 'butt'; gMR.lineJoin = 'round';
+  [[[0], '#18283a', '#2a4058'], [[1], '#1c2e42', '#33506c'], [[2], '#21364c', '#3b5c7c'], [[3], '#1c2e42', '#33506c']].forEach(([cl, fill, edge]) => {
+    const wm = cl[0] === 2 ? 3.4 : 3.2, p = draw(cl); gMR.strokeStyle = edge; gMR.lineWidth = Math.max(1.2, (wm + 0.3) * s); gMR.stroke(p); gMR.strokeStyle = fill; gMR.lineWidth = Math.max(0.6, wm * s); gMR.stroke(p); });
+  // outside of the 1.5 km window: dimmed
+  gMR.fillStyle = 'rgba(10,16,23,.6)'; gMR.beginPath(); gMR.rect(0, 0, W, H); gMR.rect(sx(-MH), sy(-MH), 2 * MH * s, 2 * MH * s); gMR.fill('evenodd'); gMR.strokeStyle = 'rgba(242,182,76,.5)'; gMR.setLineDash([6, 5]); gMR.lineWidth = 1; gMR.strokeRect(sx(-MH), sy(-MH), 2 * MH * s, 2 * MH * s); gMR.setLineDash([]);
+  // signals
+  gMR.strokeStyle = '#f2b64c'; gMR.lineWidth = 1.5; sc.d.tls.forEach(([x, y]) => { gMR.beginPath(); gMR.arc(sx(x), -(-sy(y)) * 0 + sy(-y), Math.max(2.5, 5 * Math.min(1, s)), 0, 6.2832); gMR.stroke(); });
+  // street names
+  const key = mnorm(M.id === 'sebzor' ? 'sebzor' : (PIN.find(q => q.id === M.id) || {}).label || '').replace('forcomparison', ''), k = MV.k(); gMR.font = '600 11px "IBM Plex Sans", sans-serif'; gMR.textAlign = 'center'; gMR.textBaseline = 'middle'; gMR.lineJoin = 'round';
+  sc.d.labels.forEach(lb => { const mine = key && mnorm(lb.t).includes(key.split('/')[0].slice(0, 8)) || (M.id === 'sebzor' && /sabzor|sebzor/i.test(lb.t)); if (!mine && k < 1.7) return; const x = sx(lb.x), y = sy(-lb.y); if (x < 0 || y < 0 || x > W || y > H) return;
+    let ang = -lb.a * Math.PI / 180; if (Math.cos(ang) < 0) ang += Math.PI; gMR.save(); gMR.translate(x, y); gMR.rotate(ang); gMR.lineWidth = 3; gMR.strokeStyle = 'rgba(10,16,23,.92)'; gMR.strokeText(lb.t, 0, 0); gMR.fillStyle = mine ? '#ffd98a' : '#8499ac'; gMR.fillText(lb.t, 0, 0); gMR.restore(); });
+}
+function drawCarsM(dt) {
+  const { W, H, DPR, sx, sy } = MV; gMC.setTransform(DPR, 0, 0, DPR, 0, 0); gMC.clearRect(0, 0, W, H); const sc = M.d; if (!sc) return;
+  if (M.playing) M.t = (M.t + dt * M.speed) % sc.rec; const tr = M.t, C = sc.cars, s = MV.s, cl = Math.max(4.5 * s, 4.5), cw = Math.max(1.9 * s, 2), COLS = [css('--dot-slow'), css('--dot-mid'), css('--dot-free')]; let nIn = 0, vs = 0;
+  const byC = [[], [], []];
+  for (let k = 0; k < C.n; k++) { const a = C.off[k], len = C.off[k+1] - a, u = tr - C.t0[k]; if (u < 0 || u > len - 1) continue; const i = a + Math.floor(u), j = Math.min(i + 1, C.off[k+1] - 1), f = u - Math.floor(u);
+    const x = C.X[i] + (C.X[j] - C.X[i]) * f, y = C.Y[i] + (C.Y[j] - C.Y[i]) * f, v = C.VS[i] + (C.VS[j] - C.VS[i]) * f; if (Math.abs(x) <= MH && Math.abs(y) <= MH) { nIn++; vs += v; }
+    const px = sx(x), py = sy(y); if (px < -10 || py < -10 || px > W + 10 || py > H + 10) continue; byC[v < 1.5 ? 0 : v < 5 ? 1 : 2].push(px, py, C.HD[i]); }
+  for (let c = 0; c < 3; c++) { gMC.fillStyle = COLS[c]; const a = byC[c]; for (let q = 0; q < a.length; q += 3) { gMC.save(); gMC.translate(a[q], a[q+1]); gMC.rotate(a[q+2]); gMC.fillRect(-cl / 2, -cw / 2, cl, cw); gMC.restore(); } }
+  const lv = $('mLive'); if (lv) { lv.textContent = nf(nIn) + ' cars'; $('mLive2').textContent = (nIn ? (vs / nIn * 3.6).toFixed(0) : 0) + ' km/h average · looping ' + Math.round(sc.rec / 60 * 10) / 10 + ' min of the peak · second ' + Math.floor(tr); }
+}
+
 // =====================================================================================  clock, stats, timeline, loop
 function stats(t) {
   const pc = Math.max(0, Math.min(NS - 1, t / 900 - 0.5)), i0 = Math.floor(pc), i1 = Math.min(i0 + 1, NS - 1), w = pc - i0, a = D.stats[i0], b = D.stats[i1], r = x => lerp(a[x], b[x], w);
@@ -299,7 +400,7 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now; if (S.playing) { S.t += dt * S.speed; if (S.t >= TMAX - 1) S.t = 0; }
   $('clock').textContent = fmt(S.t); $('scrub').value = Math.floor(S.t); stats(S.t); drawTL();
   const bin = Math.floor(S.t / A.step); if (S.t < ROADEND && bin !== A.bin) setBinA(bin); $('aOver').hidden = S.t < ROADEND;
-  if (VA.W) { drawRoadsA(); drawDotsA(now); } [PB, PC].forEach(P => { if (P.V.W) P.draw(now); });
+  if (VA.W) { drawRoadsA(); drawDotsA(now); drawPinsA(); } if (!$('micro').hidden && MV.W) { if (MV.dirty) { drawRoadsM(); MV.dirty = false; } drawCarsM(dt); } [PB, PC].forEach(P => { if (P.V.W) P.draw(now); });
   requestAnimationFrame(frame);
 }
 $('play').onclick = () => { S.playing = !S.playing; $('play').textContent = S.playing ? 'Pause' : 'Play'; };

@@ -109,3 +109,15 @@ The viewer is built from the macro model. It is not a microsimulation. Each 15-m
 (`python3 pipeline/street_demand.py road_edges.csv.gz mahalla_zones.csv pa_vectors.npz slices_flow.npz OUT.json`, same environment variables as the slice run).
 `micro/makhtumkuli_live.py` is the SUMO street animation; with `--macro-demand micro/macro_demand_mahtumquli_base.json` its traffic is exactly those flows (`--demand-scale` multiplies them).
 First result (base run, 08:45): about 320 cars on the 3 km stretch; 7,390 cars/h enter it. SUMO with default signal plans cannot carry that (queues from about 3,000 cars/h), so check lane counts of the link roads and use real signal timings before reading absolute delays.
+
+## Zoom into a congested street (lane-level, in the dashboard)
+In the dashboard's car-flow window, click a pin (or use "Zoom into a congested street…") to open a lane-level SUMO view of the most congested 1.5 km × 1.5 km around that street, fed with the city model's flows on **every road** of the window.
+Build chain (all runs use the base slice run, `sig/run_j40`):
+
+    python3 pipeline/street_scenes.py road_edges.csv.gz mahalla_zones.csv pa_vectors.npz slices_flow.npz OUTDIR
+    python3 micro/scene_sim.py OUTDIR/scene_ID.demand.json tashkent.osm WORKDIR site/scenes/ID.json
+    python3 viewer/assemble_viewer.py viewer/dashboard_template.html viewer_data.json site/index.html trips.json od_graph.json OUTDIR/scenes_index.json
+
+* `street_scenes.py` finds the stretch of each congested street with the most delay, routes the peak-slice demand over the macro shortest paths and cuts it at the window edge: cars/h from each entry road to each exit road, scaled to the macro model's converged flows. It also writes the congestion factor of each road so SUMO's router follows the same routes.
+* `scene_sim.py` cuts the roads from OSM (`tashkent.osm` = Tashkent roads from the Uzbekistan extract), places the entry/exit flows by position, direction and street name, runs SUMO (600 s warm-up, 300 s recorded, actuated signals) and exports lanes + every car's position each second. The street files are loaded when a pin is clicked, so the page must be served over http (`python3 -m http.server` in `site/`).
+* Limits: the macro model has no traffic on streets that no zone centroid connects to, no buses/taxis/trucks, signal timings are SUMO's, and where the junctions cannot pass the macro flow cars queue outside the window (shown as "cars waiting to enter"). Not calibrated.
