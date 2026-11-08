@@ -7,7 +7,7 @@ usage: python3 scene_sim.py scene_ID.demand.json tashkent.osm WORKDIR OUT.json [
 import sys, os, re, json, math, html, base64, argparse, subprocess, shutil, numpy as np
 ap = argparse.ArgumentParser(); ap.add_argument('demand'); ap.add_argument('osm'); ap.add_argument('workdir'); ap.add_argument('out')
 ap.add_argument('--warmup', type=int, default=600); ap.add_argument('--record', type=int, default=300); ap.add_argument('--seed', type=int, default=1); ap.add_argument('--cycle', type=int, default=90)
-ap.add_argument('--tls', default='actuated', choices=['static', 'actuated']); ap.add_argument('--sigma', type=float, default=0.5); ap.add_argument('--margin', type=float, default=650); ap.add_argument('--tol', type=float, default=30); ap.add_argument('--teleport', type=int, default=120)
+ap.add_argument('--drain', default='', help='test: comma-separated road ids whose cars are removed as they arrive (an idealised junction that passes everything), to check whether jams upstream disappear'); ap.add_argument('--relieve', default='', help='test: comma-separated junction ids whose traffic light is switched off (cars pass by priority rules), to check whether a jam upstream disappears'); ap.add_argument('--edge-stats', help='write per-road queue time series (for micro/cascade.py) to this json'); ap.add_argument('--tls', default='actuated', choices=['static', 'actuated']); ap.add_argument('--sigma', type=float, default=0.5); ap.add_argument('--margin', type=float, default=650); ap.add_argument('--tol', type=float, default=30); ap.add_argument('--teleport', type=int, default=120)
 a = ap.parse_args(); os.makedirs(a.workdir, exist_ok=True)
 try:
     import pyproj; os.environ.setdefault('PROJ_DATA', pyproj.datadir.get_data_dir())
@@ -85,9 +85,25 @@ traci.start(['sumo', '-n', net_f, '-r', routes, '--step-length', '0.5', '--seed'
 tc = traci.constants; subs = [tc.VAR_POSITION, tc.VAR_SPEED, tc.VAR_ROAD_ID]
 tracks = {}; segs = []; cross = {}; series = []; teleports = 0; pend = []
 step = 0.0
+for j_ in [x for x in a.relieve.split(',') if x]:
+    tl_ids = traci.trafficlight.getIDList(); tid = j_ if j_ in tl_ids else None
+    if tid is None and j_ in {n.getID() for n in net.getNodes()}:
+        jc = np.array(net.getNode(j_).getCoord()); d_ = [(float(np.linalg.norm(np.array(net.getNode(t_).getCoord()) - jc)), t_) for t_ in tl_ids if net.hasNode(t_)]; tid = min(d_)[1] if d_ and min(d_)[0] < 40 else None
+    if tid: traci.trafficlight.setProgram(tid, 'off'); print('traffic light', tid, 'switched off (test)')
+    else: print('no traffic light found for junction', j_)
+EDG = []; ES = {}; DRAIN = [x for x in a.drain.split(',') if x]
+if a.edge_stats:       # queue (halting cars) and car count of every road in the window, every 2 s
+    for e in net.getEdges(withInternal=False):
+        sh = np.array(e.getShape()); m = sh[len(sh)//2] - C
+        if abs(m[0]) <= H + 100 and abs(m[1]) <= H + 100 and e.allows('passenger'):
+            fn, tn = e.getFromNode(), e.getToNode(); EDG.append(dict(id=e.getID(), frm=fn.getID(), to=tn.getID(), len=round(e.getLength(), 1), lanes=e.getLaneNumber(), name=html.unescape(e.getName() or ''), tls=tn.getType() == 'traffic_light', x=round(float(m[0]), 1), y=round(float(m[1]), 1),
+                                                                                                       fx=round(float(fn.getCoord()[0] - C[0]), 1), fy=round(float(fn.getCoord()[1] - C[1]), 1), tx=round(float(tn.getCoord()[0] - C[0]), 1), ty=round(float(tn.getCoord()[1] - C[1]), 1)))
+            traci.edge.subscribe(e.getID(), [tc.LAST_STEP_VEHICLE_HALTING_NUMBER, tc.LAST_STEP_VEHICLE_NUMBER]); ES[e.getID()] = ([], [])
 def inwin(x, y, m=0): return abs(x) <= H + m and abs(y) <= H + m
 while step < a.warmup + a.record:
     traci.simulationStep(); step += 0.5; teleports += traci.simulation.getStartingTeleportNumber()
+    for eid_ in DRAIN:
+        for v_ in traci.edge.getLastStepVehicleIDs(eid_): traci.vehicle.remove(v_)
     for v in traci.simulation.getDepartedIDList(): traci.vehicle.subscribe(v, subs)
     if abs(step - round(step)) > 1e-6: continue
     sec = int(round(step))
@@ -106,7 +122,10 @@ while step < a.warmup + a.record:
         if road: t['road'] = road
         if inwin(x, y): n_in += 1; vs.append(spd)
     series.append((sec - a.warmup, n_in, float(np.mean(vs)) * 3.6 if vs else 0.0))
+    if ES and sec % 2 == 0:
+        for eid, r in traci.edge.getAllSubscriptionResults().items(): ES[eid][0].append(r[tc.LAST_STEP_VEHICLE_HALTING_NUMBER]); ES[eid][1].append(r[tc.LAST_STEP_VEHICLE_NUMBER])
 backlog = [len(traci.simulation.getPendingVehicles())]; traci.close()
+if a.edge_stats: json.dump(dict(id=sid, record=a.record, dt=2, teleports=teleports, edges=EDG, halt={k: v[0] for k, v in ES.items()}, nveh={k: v[1] for k, v in ES.items()}), open(a.edge_stats, 'w'), separators=(',', ':')); print('edge stats:', len(EDG), 'roads')
 # ---- street flows, SUMO vs macro
 out_streets = {}
 for e in net.getEdges(withInternal=False):
