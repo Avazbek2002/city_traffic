@@ -125,3 +125,14 @@ Build chain (all runs use the base slice run, `sig/run_j40`):
 ## Congestion cascades between junctions
 `micro/scene_sim.py ... --edge-stats X.edges.json` also records the queue (halting cars) and car count of every road in the window every 2 s; `micro/cascade.py X.edges.json OUT` turns it into a cause → victim graph: a road A→B is *spilled* when its queue fills ≥ 80% of it, so junction B blocks junction A. Root bottlenecks = junctions that block others but are not blocked; score = their share of all queueing in the window. `--drain ROAD_ID` removes the cars arriving on a road (an idealised junction that passes everything) to test whether upstream jams disappear.
 First results (base run, 15 min recorded, demand above capacity so queues keep growing): cascade junctions hold 63–94% of all queueing; the top root alone 22–52%; in Furqat, draining the root's approach cleared all 6 blocked junctions upstream and halved the halting cars in the window.
+
+## Start-time scenarios in the dashboard
+The page has a "Work start times" switch: *Base* (assumed spread) and *Rings: centre latest* (job-density centre starts 10:00, next rings 09:30 and 09:00, outer ring 08:30, a quarter of all jobs in each ring). The scenario recolours the mahalla areas by their start time and swaps the road loads, vehicle counts, district/mahalla people flows and sampled trips. Build chain:
+
+    WORK_PROFILE=zones WORK_CLASS_FILE=ring_outer_early.csv python3 pipeline/congestion_slices.py ... run_ring     # roads (same environment as the base run)
+    KEEP_FROM=base/slices_flow.npz python3 viewer/prep_viewer_data.py run_ring/slices_flow.npz run_ring/slice_stats.csv districts.geojson data_ring.json
+    WORK_PROFILE=zones WORK_CLASS_FILE=... python3 pipeline/build_od_graph.py ... graph_ring.json ;  ... python3 pipeline/build_trips.py ... trips_ring.json
+    python3 viewer/prep_scenario.py ring "NOTE" data_ring.json graph_ring.json trips_ring.json mahallas.geojson ring_outer_early.csv site/scenarios/ring.json
+    python3 viewer/assemble_viewer.py ... scenes_index.json scenarios.json      # scenarios.json = [{"id": "ring", "label": "...", "file": "scenarios/ring.json"}]
+
+Result: the rings scenario has a higher morning peak than the base profile (about 63,000 vs 53,000 vehicles on the road at the peak), because the busy centre is reached by everybody at the same few start times.

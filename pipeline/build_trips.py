@@ -21,6 +21,17 @@ PROFILE = {   # keep identical to congestion_slices.py
  'school':     [.005,.005,.01,.02, .10,.17,.23,.25, .08,.04,.02,.01, .01,.005,.003,.002],
  'college':    [.01,.01,.03,.04, .09,.14,.18,.19, .10,.07,.05,.03, .02,.01,.01,.01],
  'university': [.005,.005,.01,.03, .08,.11,.14,.17, .16,.12,.08,.04, .02,.01,.01,.01]}
+def _shift(p, k): q = p[k:] + [0.0]*k; f = sum(p)/sum(q); return [v*f for v in q]
+_wp = os.environ.get('WORK_PROFILE', 'base'); W0 = PROFILE['work']
+if _wp == 'early30': PROFILE['work'] = _shift(W0, 2)
+elif _wp == 'mix': PROFILE['work'] = [0.5*a + 0.5*b for a, b in zip(W0, _shift(W0, 4))]
+elif _wp in ('start9', 'stagger', 'zones'):     # same rules as congestion_slices.py
+    def _kern(S): return [max(0.0, min(360+15*j+15, S-5) - max(360+15*j, S-45))/40.0 for j in range(16)]
+    _mass = sum(W0[8:]); _early = W0[:8] + [0.0]*8
+    _prof = lambda ws: [a + _mass*sum(w*_kern(S)[j] for S, w in ws) for j, a in enumerate(_early)]
+    if _wp == 'start9': PROFILE['work'] = _prof([(540, 1.0)])
+    elif _wp == 'stagger': PROFILE['work'] = _prof([(510, .25), (540, .25), (570, .25), (600, .25)])
+elif _wp != 'base': raise SystemExit('WORK_PROFILE must be base, early30, mix, start9, stagger or zones')
 # ---- graph, built exactly as in congestion_slices.py so edge order matches the saved slices
 e = pd.read_csv(EF); e = e[~e.highway.isin(['service', 'living_street'])].reset_index(drop=True)
 ids = pd.unique(np.r_[e.u.values, e.v.values]); ix = pd.Series(np.arange(len(ids)), index=ids)
@@ -41,6 +52,10 @@ intra = INTRA_F*np.sqrt(z.area_km2.values)*CIRC/SPEED*60
 # ---- gravity (same as congestion_slices.py)
 pa = np.load(PA); P = {'work': z.population.values/z.population.sum()*z.employment.sum()}; A = {'work': z.employment.values.astype(float)}
 for p in PUR[1:]: P[p] = pa[f'{p}_P']; A[p] = pa[f'{p}_A']
+WPD = None
+if _wp == 'zones':      # every workplace mahalla has ONE start time (WORK_CLASS_FILE: zone_row, start_min); WPD = n x 16 departure profile of trips going TO each workplace
+    _cl = pd.read_csv(os.environ['WORK_CLASS_FILE']); _st = np.full(n, 540.0); _st[_cl.zone_row.values] = _cl.start_min.values
+    WPD = np.array([_prof([(S, 1.0)]) for S in _st]); PROFILE['work'] = list(WPD.mean(0))
 def ipf(Kk, Pv, Av, iters=400, tol=1e-6):
     r = np.ones(n); c = np.ones(n)
     for _ in range(iters):
@@ -70,7 +85,7 @@ for s_ in range(NS):
     t = TT[s_].astype(np.float64); T = zone_times(t); Tm = T.copy(); Tm[np.diag_indices(n)] = intra
     trips = []   # (o, d, purpose)
     for pi, p in enumerate(PUR):
-        M = ipf(np.exp(-BETA[p]*Tm), P[p], A[p]); v = M*CAR[p]/OCC[p]*PROFILE[p][s_]     # cars leaving in this 15-minute slice
+        M = ipf(np.exp(-BETA[p]*Tm), P[p], A[p]); v = M*CAR[p]/OCC[p]*(WPD[:, s_][None, :] if (WPD is not None and p == 'work') else PROFILE[p][s_])     # cars leaving in this 15-minute slice
         if p == 'school': v = v + v.T                                                   # empty return leg after drop-off
         np.fill_diagonal(v, 0); c = rng.poisson(v/K); oo, dd = np.nonzero(c)
         for o_, d_ in zip(np.repeat(oo, c[oo, dd]), np.repeat(dd, c[oo, dd])): trips.append((int(o_), int(d_), pi))

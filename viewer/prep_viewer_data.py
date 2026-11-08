@@ -6,7 +6,9 @@ SF, ST, DG, OUT = sys.argv[1:5]
 d = np.load(SF, allow_pickle=True); FL, TT = d['flow'], d['t']; NS = FL.shape[0]
 hw = d['highway']; way = d['way_id']; ul, ua, vl, va = d['u_lon'], d['u_lat'], d['v_lon'], d['v_lat']; a, b = d['a'], d['b']; ln = d['length']; cap = d['cap']; t0 = d['t0']
 ART = {'trunk','primary','secondary','tertiary','trunk_link','primary_link','secondary_link','tertiary_link'}
-keep = np.isin(hw, list(ART)) | (FL.max(0) >= 40)
+import os
+_kf = os.environ.get('KEEP_FROM')          # scenario runs: keep the same roads (and so the same chunks) as this base slices_flow.npz, so the viewer can switch scenarios
+keep = np.isin(hw, list(ART)) | ((np.load(_kf, allow_pickle=True)['flow'] if _kf else FL).max(0) >= 40)
 idx = np.where(keep)[0]
 # chain edges of one way (same direction) in travel order, cut into chunks of <= 350 m
 by = {}

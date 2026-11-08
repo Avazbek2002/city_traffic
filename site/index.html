@@ -86,7 +86,8 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
 </style>
 <div class="app">
   <header>
-    <div><h1>Tashkent Morning Dashboard</h1><div class="note" style="margin-top:4px">Model output, not measured traffic. 45% of commuters driving and a 40 s signal delay are assumptions; results are not yet calibrated. <b style="color:var(--amber)">Click an amber pin on the road map (or use “Zoom into a congested street”) to see its cars lane by lane.</b></div></div>
+    <div><h1>Tashkent Morning Dashboard</h1><div class="note" style="margin-top:4px">Model output, not measured traffic. 45% of commuters driving and a 40 s signal delay are assumptions; results are not yet calibrated. <b style="color:var(--amber)">Click an amber pin on the road map (or use “Zoom into a congested street”) to see its cars lane by lane.</b></div>
+      <div class="hl" id="scnRow" style="margin-top:6px" hidden><span>Work start times</span><select id="scn" aria-label="Work start-time scenario"></select><span class="note" id="scnNote" style="max-width:62ch"></span></div></div>
     <div class="hl"><span>Layout</span><select id="layout" aria-label="Window layout"><option value="main">Roads + two graphs</option><option value="row">Side by side</option><option value="stack">Stacked</option></select><span class="note">drag the bars between windows to resize · ⛶ maximizes one</span></div>
   </header>
   <div class="strip">
@@ -101,6 +102,7 @@ canvas.layer { position: absolute; inset: 0; width: 100%; height: 100%; display:
     <section class="win" id="wA">
       <div class="wh"><h2>Car flows</h2>
         <label><input type="checkbox" id="aRoads" checked> Road load</label>
+        <label id="aAreasL" hidden><input type="checkbox" id="aAreas" checked> Start-time areas</label>
         <select id="aMode" aria-label="What to draw"><option value="flow">Vehicle flow</option><option value="trips">Individual trips (origin → destination)</option></select>
         <select id="aFoc" aria-label="Only trips of one district" hidden><option value="0">All districts</option></select>
         <select id="aDir" aria-label="Trip direction" hidden><option value="any">from or to</option><option value="from">leaving</option><option value="to">arriving</option></select>
@@ -256,7 +258,7 @@ const D = {"nch":31899,"ns":16,"lon0":69.04,"lat0":41.08,"q":1e-05,"pts":"LGI9dw
   "entering_vph": 8686,
   "window_total_cars": 508
  }
-];
+], SCN = [{"id": "ring", "label": "Rings: centre latest", "file": "scenarios/ring.json"}];
 const NAMES = {2601:'Mirabad',2602:'Mirzo Ulugbek',2603:'Yunusabad',2604:'Yakkasaray',2605:'Shaykhantakhur',2606:'Chilanzar',2607:'Sergeli',2608:'Yashnabad',2609:'Almazar',2610:'Uchtepa',2611:'Bektemir',2612:'Yangikhayot'};
 const $ = id => document.getElementById(id), css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim(), lerp = (a, b, w) => a + (b - a) * w;
 const b64 = (s, T) => { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return new T(u.buffer); };
@@ -293,7 +295,8 @@ const allPts = RINGS_LL.flatMap(r => r.p);
 
 // =====================================================================================  WINDOW A: car flows
 const Q = D.q, lonQ0 = D.lon0, latQ0 = D.lat0;
-const PTS = b64(D.pts, Uint16Array), OFF = b64(D.off, Uint32Array), FLOW = b64(D.flow, Uint16Array), RATIO = b64(D.ratio, Uint8Array), CAP = b64(D.cap, Uint16Array), T0 = b64(D.t0, Uint16Array), N = D.nch, NS = D.ns;
+let FLOW = b64(D.flow, Uint16Array), RATIO = b64(D.ratio, Uint8Array);
+const PTS = b64(D.pts, Uint16Array), OFF = b64(D.off, Uint32Array), CAP = b64(D.cap, Uint16Array), T0 = b64(D.t0, Uint16Array), N = D.nch, NS = D.ns;
 const NP = PTS.length / 2, WX = new Float32Array(NP), WY = new Float32Array(NP), CUM = new Float32Array(NP), TOT = new Float32Array(N), NX = new Float32Array(N), NY = new Float32Array(N);
 for (let j = 0; j < NP; j++) { WX[j] = PTS[2*j] * Q * COSL; WY[j] = -PTS[2*j+1] * Q; }
 for (let k = 0; k < N; k++) { const a = OFF[k], b = OFF[k+1]; let c = 0; CUM[a] = 0; for (let j = a + 1; j < b; j++) { c += Math.hypot(WX[j]-WX[j-1], WY[j]-WY[j-1]); CUM[j] = c; } TOT[k] = c || 1e-9; const dx = WX[b-1]-WX[a], dy = WY[b-1]-WY[a], l = Math.hypot(dx, dy) || 1; NX[k] = -dy / l; NY[k] = dx / l; }
@@ -315,17 +318,21 @@ function drawRoadsA() {
   const { W, H, DPR, sx, sy } = VA; gAR.setTransform(DPR, 0, 0, DPR, 0, 0); gAR.clearRect(0, 0, W, H);
   gAR.lineWidth = 1; gAR.strokeStyle = css('--line'); gAR.fillStyle = 'rgba(255,255,255,0.012)';
   RINGS_A.forEach(r => { gAR.beginPath(); r.p.forEach(([x, y], i) => i ? gAR.lineTo(sx(x), sy(y)) : gAR.moveTo(sx(x), sy(y))); gAR.closePath(); gAR.fill(); gAR.stroke(); });
+  if (A.areas && A.show.areas) { gAR.globalAlpha = 0.44; A.areas.forEach(a => { gAR.fillStyle = STCOL[a.s]; gAR.beginPath(); a.p.forEach(([x, y], i) => i ? gAR.lineTo(sx(x), sy(y)) : gAR.moveTo(sx(x), sy(y))); gAR.closePath(); gAR.fill(); }); gAR.globalAlpha = 1; }
   if (A.bin < 0 || S.t >= ROADEND || !A.show.roads) return;
   const kz = VA.k(), off = Math.min(2.4, 0.9 + 0.35 * Math.log2(kz + 1)), wz = 0.55 + 0.45 * Math.log2(kz + 1), paths = [0, 1, 2, 3, 4, 5].map(() => new Path2D());
   for (let k = 0; k < N; k++) { const f = CF[k], vc = f / Math.max(CAP[k], 1), b = f < 15 ? 5 : vc < 0.3 ? 0 : vc < 0.6 ? 1 : vc < 0.85 ? 2 : vc < 1 ? 3 : 4, p = paths[b], a = OFF[k], e = OFF[k+1], ox = NX[k] * off, oy = NY[k] * off; p.moveTo(sx(WX[a]) + ox, sy(WY[a]) + oy); for (let j = a + 1; j < e; j++) p.lineTo(sx(WX[j]) + ox, sy(WY[j]) + oy); }
   gAR.lineCap = 'round'; gAR.lineJoin = 'round'; [5, 0, 1, 2, 3, 4].forEach(b => { gAR.strokeStyle = COL[b]; gAR.lineWidth = (b === 5 ? 0.6 : 0.8 + b * 0.35) * wz; gAR.stroke(paths[b]); });
 }
-let TP = null;
-if (TR) {
+function mkTP(TR) {
   const n = TR.n, X = b64(TR.x, Uint16Array), Y = b64(TR.y, Uint16Array), TQ = b64(TR.tq, Uint16Array), OF = b64(TR.off, Uint32Array), DEP = b64(TR.dep, Uint16Array), PU = b64(TR.pur, Uint8Array), O = b64(TR.o, Uint16Array), De = b64(TR.d, Uint16Array);
   const TX = new Float32Array(X.length), TY = new Float32Array(X.length), TTm = new Float32Array(X.length); for (let j = 0; j < X.length; j++) { TX[j] = X[j] * Q * COSL; TY[j] = -Y[j] * Q; TTm[j] = TQ[j] / 10; }
   const arr = new Float32Array(n); for (let i = 0; i < n; i++) arr[i] = DEP[i] + TTm[OF[i+1] - 1];
-  TP = { n, TX, TY, TTm, OF, DEP, PU, O, De, arr, Z: TR.zones, foc: 0, dir: 'any' };
+  return { n, TX, TY, TTm, OF, DEP, PU, O, De, arr, Z: TR.zones, foc: 0, dir: 'any' };
+}
+let TP = null;
+if (TR) {
+  TP = mkTP(TR);
   [...new Set(TR.zones.map(z => z.d))].sort().forEach(d => $('aFoc').insertAdjacentHTML('beforeend', `<option value="${d}">${NAMES[d] || d}</option>`));
 } else $('aMode').querySelector('[value=trips]').remove();
 const tripMatch = i => { if (!TP.foc) return true; const od = TP.Z[TP.O[i]].d === TP.foc, dd = TP.Z[TP.De[i]].d === TP.foc; return TP.dir === 'from' ? od : TP.dir === 'to' ? dd : (od || dd); };
@@ -349,9 +356,9 @@ function drawDotsA(now) {
   for (let c = 0; c < 3; c++) { gAD.fillStyle = DOT[c]; for (let i = 0; i < act.n; i++) { if (act.cls[i] !== c) continue; const k = act.ids[i]; const u = (act.ph[i] + mt / act.ts[i]) % 1, d = u * TOT[k], a = OFF[k], e = OFF[k+1]; let j = a + 1; while (j < e - 1 && CUM[j] < d) j++;
     const l = CUM[j] - CUM[j-1] || 1e-9, q = (d - CUM[j-1]) / l, x = WX[j-1] + (WX[j] - WX[j-1]) * q, y = WY[j-1] + (WY[j] - WY[j-1]) * q, px = sx(x) + NX[k] * off, py = sy(y) + NY[k] * off; if (px < -4 || py < -4 || px > W + 4 || py > H + 4) continue; gAD.fillRect(px - sz / 2, py - sz / 2, sz, sz); } }
 }
-function legendA() { $('aLeg').innerHTML = A.mode === 'trips'
+function legendA() { $('aLeg').innerHTML = ((A.areas && A.show.areas) ? ST_LEG + '<span style="width:100%;height:0"></span>' : '') + (A.mode === 'trips'
   ? [['--work', 'commuter'], ['--school', 'school run'], ['--college', 'college'], ['--univ', 'university']].map(([c, t]) => `<span><i style="background:var(${c})"></i>${t}</span>`).join('') + '<span><i style="border:2px solid #7ee0a3;box-sizing:border-box"></i>origin</span><span><i style="background:#fff"></i>destination</span><span>1 dot = ' + (TR ? TR.k : '') + ' cars</span>'
-  : '<span><i style="background:var(--dot-free)"></i>free flow</span><span><i style="background:var(--dot-mid)"></i>slowed</span><span><i style="background:var(--dot-slow)"></i>crawling</span><span>1 dot ≈ 6 cars · road colour = load / capacity</span>'; }
+  : '<span><i style="background:var(--dot-free)"></i>free flow</span><span><i style="background:var(--dot-mid)"></i>slowed</span><span><i style="background:var(--dot-slow)"></i>crawling</span><span>1 dot ≈ 6 cars · road colour = load / capacity</span>'); }
 legendA();
 
 // =====================================================================================  WINDOWS B, C: zone graphs
@@ -400,6 +407,32 @@ function setFocus(d) { if (!TP) return; TP.foc = d; $('aFoc').value = String(d);
 function setMode(m) { A.mode = m; $('aMode').value = m; $('aFoc').hidden = $('aDir').hidden = m !== 'trips'; legendA(); }
 $('aMode').onchange = e => setMode(e.target.value); $('aFoc').onchange = e => { TP.foc = +e.target.value; }; $('aDir').onchange = e => { TP.dir = e.target.value; };
 $('aRoads').onchange = e => { A.show.roads = e.target.checked; VA.dirty = true; }; $('aUpd').onchange = e => { A.step = +e.target.value; A.bin = -1; };
+
+// =====================================================================================  work start-time scenarios (base / rings) with coloured start-time areas
+const STCOL = { 510: '#5fa8ff', 540: '#8f7bff', 570: '#c264ff', 600: '#ff62c8' }, ST_LAB = { 510: '08:30', 540: '09:00', 570: '09:30', 600: '10:00' };
+const ST_LEG = '<span>work start:</span>' + Object.keys(STCOL).map(m => `<span><i style="background:${STCOL[m]}"></i>${ST_LAB[m]}</span>`).join('');
+A.show.areas = true; A.areas = null;
+const peakVeh = st => Math.max(...st.map(x => x.veh_on_network));
+const SCEN = { cur: 'base', cache: {}, list: [{ id: 'base', label: 'Base: assumed spread' }].concat(SCN || []),
+  base: { flow: FLOW, ratio: RATIO, stats: D.stats, g: { dp: G.dist.present, df: G.dist.flow, mp: G.mah.present, ml: G.mah.links, tr: G.transit, dep: G.departed }, TP, areas: null, note: 'Base: the assumed spread of start times (most people start between 08:00 and 10:00).' } };
+function applyScn(id) {
+  const d = SCEN.cache[id]; FLOW = d.flow; RATIO = d.ratio; D.stats = d.stats; G.dist.present = d.g.dp; G.dist.flow = d.g.df; G.mah.present = d.g.mp; G.mah.links = d.g.ml; G.transit = d.g.tr; G.departed = d.g.dep;
+  LV.dist.pres = G.dist.present; LV.mah.pres = G.mah.present; for (const k in LV) { const l = LV[k]; l.max = Math.max(...l.pres.flat(), ...l.base); }
+  if (d.TP && TP) { d.TP.foc = TP.foc; d.TP.dir = TP.dir; } TP = d.TP || TP; A.areas = d.areas; A.bin = -1; $('aAreasL').hidden = !d.areas; legendA(); VA.dirty = true;
+  const b = SCEN.cache.base; $('scnNote').textContent = d.note + (id === 'base' ? '' : ` Peak vehicles on the road: ${nf(peakVeh(d.stats))} (base ${nf(peakVeh(b.stats))}).`); SCEN.cur = id;
+}
+async function loadScn(def) {
+  const j = await (await fetch(def.file)).json(), TRn = j.trips ? mkTP(j.trips) : null, Qa = D.q;
+  SCEN.cache[def.id] = { flow: b64(j.flow, Uint16Array), ratio: b64(j.ratio, Uint8Array), stats: j.stats, g: { dp: j.graph.dist.present, df: j.graph.dist.flow, mp: j.graph.mah.present, ml: j.graph.mah.links, tr: j.graph.transit, dep: j.graph.departed },
+    TP: TRn, areas: j.areas.map(a => ({ s: a.s, p: a.p.map(([x, y]) => [x * Qa * COSL, -y * Qa]) })), note: j.note };
+}
+if (SCN && SCN.length) {
+  SCEN.cache.base = SCEN.base; $('scnRow').hidden = false; const sel = $('scn'); SCEN.list.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.label}</option>`)); $('scnNote').textContent = SCEN.base.note;
+  sel.onchange = async () => { const id = sel.value, def = SCEN.list.find(s => s.id === id);
+    if (!SCEN.cache[id]) { sel.disabled = true; $('scnNote').textContent = 'Loading…'; try { await loadScn(def); } catch (err) { sel.value = SCEN.cur; sel.disabled = false; $('scnNote').textContent = location.protocol === 'file:' ? 'Scenario files cannot be read from a local file: serve the folder over http or open the website.' : 'Could not load the scenario (' + err.message + ').'; return; } sel.disabled = false; }
+    applyScn(id); };
+  $('aAreas').onchange = e => { A.show.areas = e.target.checked; legendA(); VA.dirty = true; };
+}
 
 // =====================================================================================  congested streets: pins on the city map + lane-level (SUMO) street view
 const PIN = (SC || []).map(s => ({ ...s, wx: (s.centre[1] - D.lon0) * COSL, wy: -(s.centre[0] - D.lat0) }));
